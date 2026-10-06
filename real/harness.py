@@ -323,8 +323,8 @@ def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, 
             summ, achieved = cluster.load_window(rps)
             ready, requested = cluster.replicas()
             used, age, window, n_met = cluster.cpu_used()
-            for name, created, ready, delay in cluster.new_ready_pods():
-                pods_w.writerow([step, name, round(created - t0, 1), round(ready - t0, 1), round(delay, 1)])
+            for pod, created_at, ready_at, delay in cluster.new_ready_pods():   # distinct names: `ready` is the replica count
+                pods_w.writerow([step, pod, round(created_at - t0, 1), round(ready_at - t0, 1), round(delay, 1)])
             rho = used / max(ready * cluster.cpu_req, 1.0)
             lat = summ["mean_ms"] if summ["n"] and not np.isnan(summ["mean_ms"]) else 5000.0
             success = summ["success"] if summ["n"] else 0.0

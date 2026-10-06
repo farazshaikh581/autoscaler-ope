@@ -1,0 +1,3 @@
+step,pod,created_s,ready_s,readiness_delay_s
+2,web-service-5cdf959588-tv2hn,26.9,34.9,8.0
+3,web-service-5cdf959588-4pmvh,41.9,45.9,4.0

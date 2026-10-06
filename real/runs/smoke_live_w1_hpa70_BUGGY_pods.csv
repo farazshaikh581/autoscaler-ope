@@ -1,0 +1,2 @@
+step,pod,created_s,ready_s,readiness_delay_s
+3,web-service-5cdf959588-plzjw,42.6,51.6,9.0
