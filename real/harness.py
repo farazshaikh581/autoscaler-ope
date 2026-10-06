@@ -26,6 +26,7 @@ import argparse
 import csv
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -188,6 +189,34 @@ def cluster_state():
                 cpu_affinity=sorted(os.sched_getaffinity(0)))
 
 
+STOCK_VPA_ARGS = ["--vpa-object-namespace=hv-phase0"]     # install_vpa.sh stock profile
+RUNLOG = os.path.join(HERE, "RUNLOG.md")
+
+
+def vpa_args():
+    out = {}
+    for d in ("vpa-recommender", "vpa-updater"):
+        out[d] = json.loads(kubectl(["get", "deploy", d, "-n", "kube-system", "-o",
+                                     "jsonpath={.spec.template.spec.containers[0].args}"]) or "[]")
+    return out
+
+
+def runlog(what, expected_s):
+    """One line per live run, written before it starts (Faraz's standing rule)."""
+    if not os.path.exists(RUNLOG):
+        with open(RUNLOG, "w") as f:
+            f.write("# saul live runs (OPE). One line per run, appended before it starts.\n\n"
+                    "| start (UTC) | what | expected end (UTC) |\n|---|---|---|\n")
+    now = time.time()
+    fmt = lambda t: time.strftime("%Y-%m-%d %H:%M", time.gmtime(t))  # noqa: E731
+    with open(RUNLOG, "a") as f:
+        f.write(f"| {fmt(now)} | {what} | {fmt(now + expected_s)} |\n")
+
+
+def _sigterm(signum, frame):
+    raise SystemExit(f"terminated by signal {signum}")    # runs the finally: scale back to 2
+
+
 def e1_running():
     return subprocess.run(["pgrep", "-f", "run_vpa_matrix.sh"], capture_output=True).returncode == 0
 
@@ -201,9 +230,14 @@ def preflight_live():
             out = kubectl(["get", kind, "-n", NS, "--no-headers"]).strip()
         except RuntimeError:
             out = ""
-        if out:
+        if out and not out.startswith("No resources"):
             problems.append(f"a {kind} object exists in {NS}: {out.splitlines()[0]}")
+    args = vpa_args()
+    for d, a in args.items():
+        if a != STOCK_VPA_ARGS:
+            problems.append(f"{d} args are not the stock profile: {a}")
     state = cluster_state()
+    state["vpa_args"] = args
     cordoned = [n for n, v in state["nodes"].items() if n.startswith("k8s-worker") and v != "schedulable"]
     if cordoned:
         problems.append(f"workers cordoned: {cordoned} (M4 uses all 4 workers schedulable)")
@@ -245,6 +279,7 @@ def main():
     state = None
     if args.live:
         state = preflight_live()
+        signal.signal(signal.SIGTERM, _sigterm)
         cluster = LiveCluster(args.load_seconds)
     else:
         cluster = DryRunCluster(args.family, args.workload, args.start, args.steps, args.load_seconds, args.quiet)
@@ -260,6 +295,9 @@ def main():
     with open(os.path.join(out_dir, f"{tag}.json"), "w") as f:
         json.dump(meta, f, indent=1)
 
+    if args.live:
+        runlog(f"OPE harness {tag}: {args.policy} eps={args.eps:g}, {args.family}/{args.workload} start "
+               f"{args.start}, {args.steps} steps x {args.period:g}s", args.steps * args.period + 180)
     cluster.reset()
     t0 = time.time()
     pods_f = open(os.path.join(out_dir, f"{tag}_pods.csv"), "w", newline="")

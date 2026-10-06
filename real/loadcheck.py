@@ -52,6 +52,9 @@ def main():
     ap.add_argument("--seconds", type=int, default=60)
     args = ap.parse_args()
     state = H.preflight_live()
+    H.signal.signal(H.signal.SIGTERM, H._sigterm)
+    H.runlog(f"OPE load check: {args.rps} rps x {args.seconds}s against 12 replicas",
+             60 + len(args.rps) * (args.seconds + 15) + 120)
     cluster = H.LiveCluster(args.seconds)
     cpus = state["cpu_affinity"]
     report = dict(cluster=state, seconds=args.seconds, started=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
