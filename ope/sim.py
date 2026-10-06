@@ -15,8 +15,9 @@ if PHASE1 not in sys.path:
     sys.path.insert(0, PHASE1)
 
 from envs.joint_hv_env import (ACTIONS, REPLICA_MAX, REPLICA_MIN,  # noqa: E402
-                               SLA_MEAN_LATENCY_MS, JointHVEnv)
-from eval_baselines import ClassicalController, PredictiveController  # noqa: E402
+                               SLA_MEAN_LATENCY_MS, JointHVEnv, set_trace_family)
+from eval_baselines import (ClassicalController, PredictiveController,  # noqa: E402
+                            SloCostAwareController)
 
 WORKLOADS = ["cpu-bound", "io-bound", "mixed"]
 EPISODE_LEN = 200
@@ -30,8 +31,14 @@ def sim_commit() -> str:
         ["git", "-C", os.path.dirname(PHASE1), "rev-parse", "HEAD"], text=True).strip()
 
 
-def make_env(workload: str) -> JointHVEnv:
-    return JointHVEnv(workload=workload, episode_len=EPISODE_LEN)
+def use_family(family: str) -> None:
+    """Select the trace family for this process. The simulator requires a 'bb' tag
+    token for Bitbrains and forbids it for Azure."""
+    set_trace_family(family, "ope_bb" if family == "bitbrains" else "ope")
+
+
+def make_env(workload: str, episode_len: int = EPISODE_LEN) -> JointHVEnv:
+    return JointHVEnv(workload=workload, episode_len=episode_len)
 
 
 def snapshot(s) -> SimpleNamespace:

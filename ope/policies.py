@@ -1,7 +1,9 @@
 """Behaviour and target policies, and shadow replay of a target along a log."""
 import numpy as np
 
-from .sim import D_REPS, ClassicalController, PredictiveController, in_bounds
+from .sim import D_REPS, ClassicalController, PredictiveController, SloCostAwareController, in_bounds
+
+HPA_TOLERANCE = 0.10   # same as eval_baselines
 
 BEHAVIOUR_UTIL = 0.70
 
@@ -11,6 +13,45 @@ TARGETS = {
     "hpa60": lambda: ClassicalController(vpa=False, target_util=0.6),
     "hpa80": lambda: ClassicalController(vpa=False, target_util=0.8),
     "hpa90": lambda: ClassicalController(vpa=False, target_util=0.9),
+    "pred70": lambda: PredictiveController(vpa=False, target_util=0.7),
+}
+
+
+class StabilisedHPA(ClassicalController):
+    """Replica-only HPA with a configurable scale-in stabilisation window (steps the
+    utilisation must stay low before scaling in). stab=3 is ClassicalController."""
+
+    def __init__(self, target_util: float, stab: int):
+        super().__init__(vpa=False, target_util=target_util)
+        self.stab = stab
+
+    def act(self, m, s):
+        d_rep = 0
+        ratio = m["cpu_util"] / self.target_util
+        if s.steps_to_ready > 0:
+            self._down = 0
+        elif ratio > 1.0 + HPA_TOLERANCE:
+            d_rep, self._down = +1, 0
+        elif ratio < 1.0 - HPA_TOLERANCE:
+            self._down += 1
+            if self._down >= self.stab:
+                d_rep, self._down = -1, 0
+        else:
+            self._down = 0
+        if not in_bounds(d_rep, s):
+            d_rep = 0
+        return (d_rep, 0, 0)
+
+
+# M1b: targets chosen to differ from the behaviour, all replica-only.
+TARGETS_M1B = {
+    "hpa30": lambda: ClassicalController(vpa=False, target_util=0.3),
+    "hpa50": lambda: ClassicalController(vpa=False, target_util=0.5),
+    "hpa90": lambda: ClassicalController(vpa=False, target_util=0.9),
+    "hpa95": lambda: ClassicalController(vpa=False, target_util=0.95),
+    "hpa70_stab0": lambda: StabilisedHPA(0.7, 0),
+    "hpa70_stab10": lambda: StabilisedHPA(0.7, 10),
+    "slo_cost": lambda: SloCostAwareController(vpa=False),
     "pred70": lambda: PredictiveController(vpa=False, target_util=0.7),
 }
 # Sanity target: the behaviour's own base controller. Every IS estimator must be
