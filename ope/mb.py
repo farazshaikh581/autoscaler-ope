@@ -35,17 +35,20 @@ def shadow_with_snapshots(log: dict, factory):
     return acts, snaps
 
 
-def rollout(model, ctrls, m0, s0, loads, valid, first_actions=None):
+def rollout(model, ctrls, m0, s0, loads, valid, first_actions=None, scale_delay=SCALE_DELAY):
     """Advance len(ctrls) rollouts in lockstep for loads.shape[1] steps.
 
     ctrls: controllers (shallow copies are enough: they hold only scalars) already in the right internal state (consumed); m0: list of
     metric dicts they see first; s0: dict of int arrays (replicas, target_replicas,
     cpu_req, steps_to_ready); loads, valid: (B, H). first_actions, if given,
-    overrides the controllers' first decision (they still observe it).
+    overrides the controllers' first decision (they still observe it). scale_delay is
+    the readiness delay in decisions: 2 in the simulator; on the real cluster it is
+    measured from the logs (1 means a scale shows up in the very next outcome).
     Returns predicted sla_ok and cost, (B, H); entries with valid False are 0."""
     B, H = loads.shape
     rep, tgt = s0["replicas"].copy(), s0["target_replicas"].copy()
     cpu, rdy = s0["cpu_req"].copy(), s0["steps_to_ready"].copy()
+    rdy = np.minimum(rdy, scale_delay)
     ms = list(m0)
     sla, cost = np.zeros((B, H)), np.zeros((B, H))
     for h in range(H):
@@ -59,7 +62,7 @@ def rollout(model, ctrls, m0, s0, loads, valid, first_actions=None):
         # apply, then advance readiness (same order as an orchestrator tick)
         tgt = np.clip(tgt + d, REPLICA_LO, REPLICA_HI)
         start = (tgt != rep) & (rdy == 0)
-        rdy = np.where(start, SCALE_DELAY, rdy)
+        rdy = np.where(start, scale_delay, rdy)
         ticking = rdy > 0
         rdy = np.where(ticking, rdy - 1, rdy)
         rep = np.where(ticking & (rdy == 0), tgt, rep)
@@ -80,7 +83,7 @@ def _state(log, idx):
             for k in ("replicas", "target_replicas", "cpu_req", "steps_to_ready")}
 
 
-def mb_estimate(log, model, factory):
+def mb_estimate(log, model, factory, scale_delay=SCALE_DELAY):
     """Roll the target from each episode's start over the logged load. Returns
     per-step predicted (sla_ok, cost), (N, T)."""
     n, T = log["d_rep"].shape
@@ -89,10 +92,10 @@ def mb_estimate(log, model, factory):
         c.reset()
     idx = [(i, 0) for i in range(n)]
     return rollout(model, ctrls, [log["m"][i][0] for i in range(n)], _state(log, idx),
-                   log["load"], np.ones((n, T), bool))
+                   log["load"], np.ones((n, T), bool), scale_delay=scale_delay)
 
 
-def window_q(log, model, snaps, kmax):
+def window_q(log, model, snaps, kmax, scale_delay=SCALE_DELAY):
     """Model values for DR: from every logged step j, roll the target for kmax steps
     (V) and the same with the logged action first (Q). Returns dict of
     (N, T, kmax) arrays: v_sla, v_cost, q_sla, q_cost (value of step j+h)."""
@@ -110,7 +113,7 @@ def window_q(log, model, snaps, kmax):
     out = {}
     for tag, first in (("v", None), ("q", log["d_rep"].reshape(-1))):
         ctrls = [copy.copy(snaps[i][j]) for i, j in idx]
-        sla, cost = rollout(model, ctrls, m0, s0, loads, valid, first)
+        sla, cost = rollout(model, ctrls, m0, s0, loads, valid, first, scale_delay)
         out[f"{tag}_sla"] = sla.reshape(n, T, kmax)
         out[f"{tag}_cost"] = cost.reshape(n, T, kmax)
     return out
@@ -162,14 +165,14 @@ class LoggedActions:
         return (d, 0, 0)
 
 
-def mb_logged(log, model):
+def mb_logged(log, model, scale_delay=SCALE_DELAY):
     """Model rollout of the logged action sequence from each episode start.
     Returns predicted per-step (sla_ok, cost), (N, T), to compare with the log."""
     n, T = log["d_rep"].shape
     ctrls = [LoggedActions(log["d_rep"][i]) for i in range(n)]
     idx = [(i, 0) for i in range(n)]
     return rollout(model, ctrls, [log["m"][i][0] for i in range(n)], _state(log, idx),
-                   log["load"], np.ones((n, T), bool))
+                   log["load"], np.ones((n, T), bool), scale_delay=scale_delay)
 
 
 def window_anchor(v, k):
