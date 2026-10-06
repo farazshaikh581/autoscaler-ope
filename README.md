@@ -258,7 +258,7 @@ median / max over cells of the error averaged over five logging seeds)
   in this simulator; it may hold where the behaviour's replicas track load
   tightly.
 - *Learning curve:* MB is as accurate with 10 logged episodes as with 200
-  (median 0.47-1.1 SLA points across n = 10/50/200). The simulator is
+  (median 0.47-1.23 SLA points across n = 10/50/200). The simulator is
   deterministic and low-dimensional, so this is optimistic for a real system.
 
 Files: `results/m2_summary.csv`, `m2_hard_cells.csv`, `m2_gate.csv`,
