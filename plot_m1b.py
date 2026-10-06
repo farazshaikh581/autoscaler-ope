@@ -47,7 +47,7 @@ def plot(est, col, ylabel, gate, out, title):
 
 
 if __name__ == "__main__":
-    est = pd.read_csv(os.path.join(RES, "m1b_estimates.csv"))
+    est = pd.read_csv(os.path.join(RES, "raw", "m1b_estimates.csv.gz"))
     plot(est, "sla_abs_err", "|error|, SLA points", 3.0, "m1b_err_by_target_sla.png",
          f"SLA% error per target, eps={EPS}, 200 logged episodes, mean over 5 logging seeds "
          "(dashed: 3-point gate)")

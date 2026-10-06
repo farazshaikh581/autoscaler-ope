@@ -1,4 +1,4 @@
-"""M1 figures from results/m1_estimates.csv and results/m1_dither_cost.csv.
+"""M1 figures from results/raw/m1_estimates.csv.gz and results/m1_dither_cost.csv.
 
   python plot_m1.py   -> results/m1_err_vs_eps.png, results/m1_dither_cost.png
 """
@@ -89,6 +89,6 @@ def dither_cost(dc: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    err_vs_eps(pd.read_csv(os.path.join(RES, "m1_estimates.csv")))
+    err_vs_eps(pd.read_csv(os.path.join(RES, "raw", "m1_estimates.csv.gz")))
     dither_cost(pd.read_csv(os.path.join(RES, "m1_dither_cost.csv")))
     print("wrote results/m1_err_vs_eps.png, results/m1_dither_cost.png")

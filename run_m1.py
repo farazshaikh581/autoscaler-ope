@@ -3,11 +3,12 @@ compare with on-policy ground truth.
 
   python run_m1.py --procs 8
 
-Writes results/m1_estimates.csv, results/m1_dither_cost.csv, results/m1_truth.csv.
+Writes results/raw/m1_estimates.csv.gz, results/m1_dither_cost.csv, results/m1_truth.csv.
 Every row carries the simulator commit (sim_commit).
 """
 import argparse
 import csv
+import gzip
 import os
 import time
 from multiprocessing import Pool
@@ -82,7 +83,8 @@ def main():
     fields = ["estimator", "target", "workload", "eps", "n_episodes", "rep", "sla_estimate",
               "sla_truth", "sla_abs_err", "cost_estimate", "cost_truth", "cost_abs_err",
               "match_frac", "sim_commit"]
-    with open(os.path.join(HERE, "results", "m1_estimates.csv"), "w", newline="") as f:
+    os.makedirs(os.path.join(HERE, "results", "raw"), exist_ok=True)
+    with gzip.open(os.path.join(HERE, "results", "raw", "m1_estimates.csv.gz"), "wt", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         for rows, _ in log_out:

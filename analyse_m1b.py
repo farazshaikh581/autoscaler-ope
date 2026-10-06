@@ -61,8 +61,8 @@ def go_nogo(est: pd.DataFrame, vs: pd.DataFrame, ks) -> pd.DataFrame:
 
 
 def main():
-    est = pd.read_csv(os.path.join(RES, "m1b_estimates.csv"))
-    vs = pd.read_csv(os.path.join(RES, "m1b_vs_replay.csv"))
+    est = pd.read_csv(os.path.join(RES, "raw", "m1b_estimates.csv.gz"))
+    vs = pd.read_csv(os.path.join(RES, "raw", "m1b_vs_replay.csv.gz"))
     truth = pd.read_csv(os.path.join(RES, "m1b_truth.csv"))
     pd.set_option("display.width", 240)
     pd.set_option("display.max_columns", 30)

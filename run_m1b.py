@@ -14,6 +14,7 @@ starts at index 0. Those cells are dropped; mixed is run as an extra cell with
 """
 import argparse
 import csv
+import gzip
 import os
 import time
 from multiprocessing import Pool
@@ -170,7 +171,8 @@ def main():
               "sla_estimate", "sla_truth_paired", "sla_abs_err", "sla_truth_unpaired",
               "cost_estimate", "cost_truth_paired", "cost_abs_err", "cost_rel_err_pct", "cost_truth_unpaired",
               "match_frac", "sim_commit"]
-    with open(os.path.join(res, "m1b_estimates.csv"), "w", newline="") as f:
+    os.makedirs(os.path.join(res, "raw"), exist_ok=True)
+    with gzip.open(os.path.join(res, "raw", "m1b_estimates.csv.gz"), "wt", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         for key, rows, _, _ in log_out:
@@ -187,7 +189,7 @@ def main():
 
     # |err_est| - |err_replay| at n = 200: mean over reps, 95% interval from the
     # episode bootstrap (each replicate averages one resample per rep).
-    with open(os.path.join(res, "m1b_vs_replay.csv"), "w", newline="") as f:
+    with gzip.open(os.path.join(res, "raw", "m1b_vs_replay.csv.gz"), "wt", newline="") as f:
         cols = ["family", "workload", "target", "eps", "scope", "metric", "estimator",
                 "diff_mean", "ci_lo", "ci_hi", "units", "boot", "sim_commit"]
         w = csv.DictWriter(f, fieldnames=cols)

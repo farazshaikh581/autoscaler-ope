@@ -52,7 +52,7 @@ Run: `python run_m1.py --procs 8 && python plot_m1.py` (about 70 s on 8 cores).
 
 **Outputs**
 
-- `results/m1_estimates.csv`: one row per estimator x target x workload x eps x
+- `results/raw/m1_estimates.csv.gz`: one row per estimator x target x workload x eps x
   n_episodes x rep, with the estimate, truth and absolute error for SLA% and cost.
 - `results/m1_truth.csv`: on-policy SLA% and cost of each target.
 - `results/m1_dither_cost.csv`: the behaviour's own SLA% and cost per eps, with
@@ -109,7 +109,7 @@ Run: `python run_m1b.py --procs 8 && python analyse_m1b.py && python plot_m1b.py
 - Main metric: `|err_est| - |err_replay|` at n = 200, as the mean over 5
   logging seeds, with 95% intervals from an episode bootstrap (500 resamples,
   logged episodes resampled together with their paired truth).
-  File: `m1b_vs_replay.csv`.
+  File: `raw/m1b_vs_replay.csv.gz`.
 - Two scopes:
   - all steps;
   - high-load steps: the top quartile of `load_frac` within each episode. The
@@ -164,3 +164,11 @@ Run: `python run_m1b.py --procs 8 && python analyse_m1b.py && python plot_m1b.py
   replay as well, because on that short trace the dithered behaviour itself
   drifts from HPA-70.
 - *Dither cost* is in `m1b_dither_cost.csv`.
+
+## Repository layout and size
+
+Large per-run tables are kept gzipped under `results/raw/` (`*.csv.gz`, marked
+binary in `.gitattributes`, so they are not diffed); pandas reads them directly.
+Small summary tables stay as plain CSV in `results/`. `.deps/` holds scikit-learn
+and scipy installed with `uv pip install --target .deps --no-deps` (numpy comes from
+the venv) and is not committed.
