@@ -154,7 +154,7 @@ Run: `python run_m1b.py --procs 8 && python analyse_m1b.py && python plot_m1b.py
   (11 significant), and is significantly worse in none.
 - *It does not fix the large shifts.* For the cells with the largest replay
   errors (HPA-90 and HPA-95 on Bitbrains io-bound), self-normalised truncated
-  PDIS at k <= 4 removes only 15-30% of the error. These targets settle at a
+  PDIS at k = 4 (eps = 0.05) removes only 13-34% of the error. These targets settle at a
   different replica level, and that effect builds up over more than 4
   decisions. At k = 8, which is outside the go/no-go, the error is roughly
   halved (HPA-90: 30.8 to 15.0), but variance grows. Model-based or doubly
