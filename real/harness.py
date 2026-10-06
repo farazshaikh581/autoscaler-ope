@@ -104,10 +104,14 @@ class LiveCluster:
             return float("nan"), float("nan"), float("nan"), 0
         if not items:
             return float("nan"), float("nan"), float("nan"), 0
-        used = sum(parse_cpu_millicores(c["usage"]["cpu"]) for it in items for c in it["containers"])
-        now = time.time()
-        ages = [now - _ts(it["timestamp"]) for it in items]
-        windows = [float(it["window"].rstrip("s")) for it in items]
+        try:
+            used = sum(parse_cpu_millicores(c["usage"]["cpu"]) for it in items for c in it["containers"])
+            now = time.time()
+            ages = [now - _ts(it["timestamp"]) for it in items]
+            windows = [_duration_s(it["window"]) for it in items]
+        except (KeyError, ValueError) as e:            # a malformed sample must not end the run
+            print(f"  [warn] metrics parse: {e}")
+            return float("nan"), float("nan"), float("nan"), 0
         return used, min(ages), float(np.mean(windows)), len(items)
 
     def new_ready_pods(self):
@@ -173,6 +177,16 @@ class DryRunCluster:
     def scale(self, n):
         self._print(["scale", "deploy", DEPLOY, "-n", NS, f"--replicas={n}"])
         self.b.apply(n - self.b.s.target_replicas, 0, 0)
+
+
+def _duration_s(text):
+    """Go duration as reported by metrics-server ('16.4s', '803ms', '1m2.5s') -> seconds."""
+    import re
+    units = {"h": 3600.0, "m": 60.0, "s": 1.0, "ms": 1e-3, "us": 1e-6, "µs": 1e-6, "ns": 1e-9}
+    parts = re.findall(r"([0-9.]+)(ms|us|µs|ns|h|m|s)", text)
+    if not parts or "".join(n + u for n, u in parts) != text:
+        raise ValueError(f"unparsed duration {text!r}")
+    return sum(float(n) * units[u] for n, u in parts)
 
 
 def _ts(iso):

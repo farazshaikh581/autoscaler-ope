@@ -3,3 +3,22 @@
 pilot_w1_hpa70: 200 steps in 3001s -> /home/labtlc/autoscaler-ope/real/runs/pilot_w1_hpa70.csv
 [2026-10-06T16:43:08Z] W1 hpa70: done
 [2026-10-06T16:43:08Z] W1 hpa95: start
+Traceback (most recent call last):
+  File "/home/labtlc/autoscaler-ope/real/harness.py", line 360, in <module>
+    main()
+  File "/home/labtlc/autoscaler-ope/real/harness.py", line 307, in main
+    run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w, pods_f.flush)
+  File "/home/labtlc/autoscaler-ope/real/harness.py", line 325, in run_steps
+    used, age, window, n_met = cluster.cpu_used()
+  File "/home/labtlc/autoscaler-ope/real/harness.py", line 110, in cpu_used
+    windows = [float(it["window"].rstrip("s")) for it in items]
+  File "/home/labtlc/autoscaler-ope/real/harness.py", line 110, in <listcomp>
+    windows = [float(it["window"].rstrip("s")) for it in items]
+ValueError: could not convert string to float: '803m'
+[2026-10-06T17:29:13Z] W1 hpa95: FAILED, stopping the pilot
+[2026-10-06T17:29:15Z] joint_hv_autoscaler at 70a6553
+mutatingwebhookconfiguration.admissionregistration.k8s.io/vpa-webhook-config patched
+[2026-10-06T17:30:16Z] webhook selector before: {"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"NotIn","values":[""]}]}
+[2026-10-06T17:30:16Z] webhook selector after 60 s: {"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["hv-phase0"]}]}
+[2026-10-06T17:30:16Z] report: real/runs/pilot_report.md
+[2026-10-06T17:30:16Z] PILOT DONE

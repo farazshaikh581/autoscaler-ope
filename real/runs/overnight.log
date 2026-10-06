@@ -1,1 +1,6 @@
 [2026-10-06T16:03:21Z] overnight runner start (pid 307538); waiting for PILOT DONE
+[2026-10-06T17:30:24Z] pilot done; gate check
+(a) load generator: PASS
+(e) harness: FAIL: hpa95 has 177 rows; Traceback (most recent call last):; [2026-10-06T17:29:13Z] W1 hpa95: FAILED, stopping the pilot
+(b) live SLA gap HPA-70 minus HPA-95: 0.0 points  <-- FLAG: under 10 points (proceeding anyway, as instructed)
+[2026-10-06T17:30:25Z] GATE FAILED ((a) load or (e) harness): batch not started
