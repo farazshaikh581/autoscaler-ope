@@ -1,0 +1,19 @@
+{
+ "live": false,
+ "policy": "hpa95",
+ "eps": 0.0,
+ "seed": 0,
+ "family": "bitbrains",
+ "workload": "io-bound",
+ "start": 4725,
+ "steps": 200,
+ "period": 15.0,
+ "load_seconds": 12,
+ "max_rps": 2050.0,
+ "tag": "dry_bitbrains_io-bound_4725_hpa95_eps0_s0",
+ "quiet": true,
+ "cpu_int": 0.5,
+ "sim_commit": "baf51c2eb1129ff7f6fe6c83858b91fc8a7e82df",
+ "ope_commit": "f09545e1935d466140123ad3827b8763547fdbdc",
+ "started": "2026-10-06T15:08:32Z"
+}

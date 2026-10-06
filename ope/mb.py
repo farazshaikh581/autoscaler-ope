@@ -144,3 +144,43 @@ def dr_per_step(rho, r, v, q, k):
 
 def dr_ratios(log, target_actions, mu):
     return ratios(target_actions == log["d_rep"], mu)
+
+
+class LoggedActions:
+    """Replays one logged episode's replica deltas open-loop, for calibrating the
+    model on the behaviour's own trajectory."""
+
+    def __init__(self, deltas):
+        self.deltas, self.t = deltas, 0
+
+    def reset(self):
+        self.t = 0
+
+    def act(self, m, s):
+        d = int(self.deltas[self.t])
+        self.t += 1
+        return (d, 0, 0)
+
+
+def mb_logged(log, model):
+    """Model rollout of the logged action sequence from each episode start.
+    Returns predicted per-step (sla_ok, cost), (N, T), to compare with the log."""
+    n, T = log["d_rep"].shape
+    ctrls = [LoggedActions(log["d_rep"][i]) for i in range(n)]
+    idx = [(i, 0) for i in range(n)]
+    return rollout(model, ctrls, [log["m"][i][0] for i in range(n)], _state(log, idx),
+                   log["load"], np.ones((n, T), bool))
+
+
+def window_anchor(v, k):
+    """V_j(t) with j = max(0, t-k+1): the value windowed DR starts from, (N, T)."""
+    n, T, _ = v.shape
+    return np.stack([v[:, max(0, t - k + 1), t - max(0, t - k + 1)] for t in range(T)], axis=1)
+
+
+def dr_mb_per_step(dr, v, k, mb_full):
+    """DR anchored on the full-horizon MB value: replace windowed DR's anchor (the
+    model value from the behaviour's state k decisions back) with the model's
+    prediction of the same step from the episode start under the target. Equals
+    mb_full + (dr - anchor); at full horizon (j = 0) it is ordinary DR."""
+    return mb_full + (dr - window_anchor(v, k))

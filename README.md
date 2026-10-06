@@ -265,3 +265,32 @@ Files: `results/m2_summary.csv`, `m2_hard_cells.csv`, `m2_gate.csv`,
 `m2_learning_curve.csv`, `m2_model_fit.csv` (knee parameters and logged replica
 range per log), `m2_summary.png`, and `raw/m2_estimates.csv.gz` /
 `raw/m2_vs_replay.csv.gz`.
+
+## M3: hybrid estimators
+
+Run: `python run_m3.py --procs 8 && python analyse_m3.py && python plot_m3.py`
+(about 9 min on 8 cores).
+
+Same logs as M1b/M2, n = 200, eps 0 / 0.05 / 0.1. New estimators:
+
+- `mbcal_*` / `mbcalq_*`: MB minus the model's bias on the behaviour's own
+  trajectory. The logged actions are replayed through the model and compared with
+  the logged outcomes; the bias is taken overall, or per quartile of logged load.
+- `drmb_k*`: windowed DR anchored on the full-horizon MB rollout, i.e. MB plus
+  the windowed DR residual. At full horizon it reduces to ordinary DR.
+- Agreement switch: windowed DR (or SN truncated PDIS) when the target's action
+  agreement with the logged actions is at least tau, MB-trees otherwise. Tau is
+  chosen on Azure only and applied to Bitbrains.
+  `results/m3_switch_sensitivity.csv` shows how the result depends on tau.
+
+The current story with every number tied to its CSV is in `results/NOTES.md`.
+
+## M4 preparation: real cluster (not run)
+
+`real/harness.py` is a 15 s control loop on saul's hv-phase0/web-service: a
+dithered HPA or a target controller, `kubectl scale`, and trace-driven load at
+saul's calibrated scale. It dry-runs against the simulator by default; `--live`
+is gated on E1 having finished and no HPA/VPA object existing in hv-phase0.
+
+`real/pick_windows.py` chooses the trace windows. `real/PLAN.md` holds the run
+plan and cluster-time budget.

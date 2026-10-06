@@ -93,6 +93,39 @@ def main():
                   f"{int(sub.halved.sum())} halved (k<=4, 0<eps<={MAX_EPS}), "
                   f"{int(sub.significant.sum())} with the 95% CI below 0")
     pd.concat(out).to_csv(os.path.join(RES, "m1b_go_nogo.csv"), index=False)
+    fixed_setting(est, vs, pd.concat(out))
+
+
+def fixed_setting(est, vs, gn):
+    """Pre-specified settings (no best-of-9): for each estimator at a fixed eps, over
+    the main qualifying cells at that eps. -> results/m1b_fixed_setting.csv"""
+    d = est[(est.n_episodes == 200) & (est.target != "hpa70") & ~est.workload.str.contains("L100")]
+    err = d.groupby(["family", "workload", "target", "scope", "eps", "estimator"])[
+        ["sla_abs_err", "cost_rel_err_pct"]].mean()
+    rows = []
+    cells = gn[gn.estimator_family == "tpdis"][["family", "workload", "target", "scope", "metric"]]
+    for e in ("tpdis_k2", "tpdis_k4", "sntpdis_k2", "sntpdis_k4"):
+        for eps in (0.05, 0.1):
+            n = better = halved = sig = worse = 0
+            for r in cells[~cells.workload.str.contains("L100")].itertuples():
+                col, gate = ("sla_abs_err", SLA_GATE) if r.metric == "sla" else ("cost_rel_err_pct", COST_GATE_PCT)
+                rep = err.loc[(r.family, r.workload, r.target, r.scope, eps, "replay"), col]
+                if rep < gate:
+                    continue
+                v = err.loc[(r.family, r.workload, r.target, r.scope, eps, e), col]
+                ci = vs[(vs.family == r.family) & (vs.workload == r.workload) & (vs.target == r.target)
+                        & (vs.scope == r.scope) & (vs.metric == r.metric) & (vs.eps == eps) & (vs.estimator == e)].iloc[0]
+                n += 1
+                better += v < rep
+                halved += v <= 0.5 * rep
+                sig += (v <= 0.5 * rep) and ci.ci_hi < 0
+                worse += ci.ci_lo > 0
+            rows.append(dict(estimator=e, eps=eps, qualifying=n, better_than_replay=better, halved=halved,
+                             halved_ci_below_0=sig, significantly_worse=worse))
+    fs = pd.DataFrame(rows)
+    fs.to_csv(os.path.join(RES, "m1b_fixed_setting.csv"), index=False)
+    print("\n== pre-specified settings (main qualifying cells) ==")
+    print(fs.to_string(index=False))
 
 
 if __name__ == "__main__":

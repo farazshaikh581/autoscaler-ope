@@ -79,6 +79,9 @@ def main():
 
     s = est[(est.target == "hpa70") & (est.n_episodes == 200) & ~est.workload.str.contains("L100")]
     print("\n== sanity target hpa70, n=200, max over main cells of mean |SLA err| ==")
+    san = (s.groupby(["scope", "estimator", "eps", "family", "workload"]).sla_abs_err.mean()
+           .groupby(["scope", "estimator", "eps"]).max().reset_index(name="sla_err_max_over_main_cells"))
+    san.to_csv(os.path.join(RES, "m2_sanity.csv"), index=False)
     print(s.groupby(["scope", "estimator", "family", "workload"]).sla_abs_err.mean()
           .groupby(["scope", "estimator"]).max().unstack("scope").round(2).to_string())
 
