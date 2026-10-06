@@ -80,12 +80,24 @@ logged load, with the platform's replica mechanics known.
   scope. This is the best case for an operator who knows the system's
   functional form.
 
-**Bottom line.** Replay can be off by 30-60 SLA points. No single estimator passes
-every cell honestly:
-- windowed IS and DR handle small and moderate changes;
-- calibrated MB or DR-MB handle large ones, unless the target has a knife-edge
-  rule;
-- the switch combines them, but its threshold is not identified by the data.
+**Bottom line.** Replay can be off by 30-60 SLA points.
 
-Whether MB's advantage survives noise, hidden state and warm-up on the real cluster
-is the M4 question.
+- *Headline estimators*, pre-specified for the paper: calibrated MB
+  (`mbcalq_trees`) and DR anchored on MB (`drmb_k4`). At eps = 0.1 their
+  median / max SLA errors are 0.07 / 1.85 and 0.09 / 2.03 points. Each leaves
+  4 main cells outside the gate: the knife-edge slo_cost cost errors, which are
+  a stated limitation (`m3_summary.csv`, `m3_gate.csv`).
+- *Agreement switch*: reported only as a sensitivity result, because Azure does
+  not identify its threshold.
+- *Calibrated knee model*: the "known functional form" bound only.
+
+**Dithering.** In simulation the best estimator, calibrated MB, needs no dithering:
+its median / max SLA error is 0.08 / 1.78 at eps = 0 and 0.07 / 1.85 at eps = 0.1
+(`m3_summary.csv`). The IS/DR family needs dithering in principle: at eps = 0 its
+weights are zero wherever the target deviates from the logged actions, so it has no
+support there. Its measured gain from dithering is modest here:
+- SN truncated PDIS median 1.09 at eps = 0 vs 0.80 at eps = 0.1;
+- DR-MB high-load max 7.3 vs 4.4-4.7.
+
+The real cluster decides whether calibrated MB stays accurate without dithering
+once noise, hidden state and warm-up are present (M4).

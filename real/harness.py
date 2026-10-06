@@ -52,7 +52,7 @@ CPU_REQ_M = 200                      # web-service.yaml request; read live in --
 TARGETS = {**TARGETS_M1B, **SANITY_TARGETS}
 FIELDS = ["step", "wall_s", "load_frac", "rps_target", "rps_achieved", "n_requests",
           "latency_mean_ms", "latency_p50_ms", "latency_p95_ms", "latency_p99_ms", "success",
-          "cpu_used_m", "rho", "cpu_util", "ready_replicas", "requested_replicas", "cpu_req",
+          "cpu_used_m", "metrics_age_s", "metrics_window_s", "pods_with_metrics", "rho", "cpu_util", "ready_replicas", "requested_replicas", "cpu_req",
           "steps_to_ready", "sla_ok", "cost_vcpu", "d_rep", "mu_minus", "mu_zero", "mu_plus", "act_s"]
 
 
@@ -65,6 +65,7 @@ class LiveCluster:
         from loadgen import run_load, summarize
         self._run_load, self._summarize = run_load, summarize
         self.cpu_req = self._cpu_req()
+        self._seen = set()
 
     def _cpu_req(self):
         d = kubectl_json(["get", "deploy", DEPLOY, "-n", NS])
@@ -81,6 +82,7 @@ class LiveCluster:
                 break
             time.sleep(5)
         time.sleep(settle_s)
+        self.new_ready_pods()                # pods present before step 0 are not timed
 
     def load_window(self, rps):
         samples = self._run_load(self.url, max(1, int(rps)), self.load_seconds, quiet=True)
@@ -91,11 +93,39 @@ class LiveCluster:
         return int(d.get("status", {}).get("readyReplicas", 0) or 0), int(d["spec"]["replicas"])
 
     def cpu_used(self):
+        """Total pod CPU from the metrics API (what kubectl top shows), with the age of
+        the newest sample and its averaging window, so the metric lag is measured."""
         try:
-            out = kubectl(["top", "pods", "-n", NS, "-l", SELECTOR, "--no-headers"])
+            raw = kubectl(["get", "--raw", f"/apis/metrics.k8s.io/v1beta1/namespaces/{NS}/pods"
+                           f"?labelSelector=app%3D{DEPLOY}"])
+            items = json.loads(raw)["items"]
+        except (RuntimeError, ValueError, KeyError):
+            return float("nan"), float("nan"), float("nan"), 0
+        if not items:
+            return float("nan"), float("nan"), float("nan"), 0
+        used = sum(parse_cpu_millicores(c["usage"]["cpu"]) for it in items for c in it["containers"])
+        now = time.time()
+        ages = [now - _ts(it["timestamp"]) for it in items]
+        windows = [float(it["window"].rstrip("s")) for it in items]
+        return used, min(ages), float(np.mean(windows)), len(items)
+
+    def new_ready_pods(self):
+        """Pods that became Ready since the last call: (name, created, ready, delay_s)."""
+        try:
+            pods = kubectl_json(["get", "pods", "-n", NS, "-l", SELECTOR])["items"]
         except RuntimeError:
-            return float("nan")
-        return sum(parse_cpu_millicores(line.split()[1]) for line in out.splitlines() if line.split())
+            return []
+        out = []
+        for p in pods:
+            name = p["metadata"]["name"]
+            if name in self._seen:
+                continue
+            cond = {c["type"]: c for c in p.get("status", {}).get("conditions", [])}
+            if cond.get("Ready", {}).get("status") == "True":
+                self._seen.add(name)
+                created, ready = _ts(p["metadata"]["creationTimestamp"]), _ts(cond["Ready"]["lastTransitionTime"])
+                out.append((name, created, ready, ready - created))
+        return out
 
     def scale(self, n):
         kubectl(["scale", "deploy", DEPLOY, "-n", NS, f"--replicas={n}"], timeout=30)
@@ -134,11 +164,28 @@ class DryRunCluster:
         return self.b.s.replicas, self.b.s.target_replicas
 
     def cpu_used(self):
-        return self.m["rho"] * self.b.s.replicas * self.cpu_req
+        return self.m["rho"] * self.b.s.replicas * self.cpu_req, 0.0, 0.0, self.b.s.replicas
+
+    def new_ready_pods(self):
+        return []
 
     def scale(self, n):
         self._print(["scale", "deploy", DEPLOY, "-n", NS, f"--replicas={n}"])
         self.b.apply(n - self.b.s.target_replicas, 0, 0)
+
+
+def _ts(iso):
+    """RFC 3339 timestamp from the API server or a kubelet -> epoch seconds."""
+    from datetime import datetime, timezone
+    return datetime.strptime(iso, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+
+
+def cluster_state():
+    """Node schedulability and this process's CPU affinity, for the run metadata."""
+    nodes = kubectl_json(["get", "nodes"])["items"]
+    return dict(nodes={n["metadata"]["name"]: ("cordoned" if n["spec"].get("unschedulable") else "schedulable")
+                       for n in nodes},
+                cpu_affinity=sorted(os.sched_getaffinity(0)))
 
 
 def e1_running():
@@ -156,8 +203,15 @@ def preflight_live():
             out = ""
         if out:
             problems.append(f"a {kind} object exists in {NS}: {out.splitlines()[0]}")
+    state = cluster_state()
+    cordoned = [n for n, v in state["nodes"].items() if n.startswith("k8s-worker") and v != "schedulable"]
+    if cordoned:
+        problems.append(f"workers cordoned: {cordoned} (M4 uses all 4 workers schedulable)")
+    if any(c % 2 for c in state["cpu_affinity"]):
+        problems.append(f"process may run on odd CPUs {state['cpu_affinity']} (worker vCPU cores); use taskset")
     if problems:
         sys.exit("refusing to start live run: " + "; ".join(problems))
+    return state
 
 
 def make_policy(name, eps, seed):
@@ -188,8 +242,9 @@ def main():
     load = np.clip(cpu / (np.percentile(cpu, 99) or 1.0), 0, 1.5)   # same normalisation as the sim
     cpu_int = INTENSITY[args.workload]["cpu"]
 
+    state = None
     if args.live:
-        preflight_live()
+        state = preflight_live()
         cluster = LiveCluster(args.load_seconds)
     else:
         cluster = DryRunCluster(args.family, args.workload, args.start, args.steps, args.load_seconds, args.quiet)
@@ -198,7 +253,8 @@ def main():
     tag = args.tag or f"{'live' if args.live else 'dry'}_{args.family}_{args.workload}_{args.start}_{args.policy}_eps{args.eps:g}_s{args.seed}"
     out_dir = os.path.join(HERE, "runs" if args.live else "dryruns")
     os.makedirs(out_dir, exist_ok=True)
-    meta = dict(vars(args), tag=tag, cpu_int=cpu_int, sim_commit=sim_commit(),
+    meta = dict(vars(args), tag=tag, cpu_int=cpu_int, sim_commit=sim_commit(), cluster=state,
+                topology="all 4 workers schedulable" if args.live else "dry-run (simulator)",
                 ope_commit=subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True,
                                           text=True).stdout.strip(), started=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     with open(os.path.join(out_dir, f"{tag}.json"), "w") as f:
@@ -206,6 +262,19 @@ def main():
 
     cluster.reset()
     t0 = time.time()
+    pods_f = open(os.path.join(out_dir, f"{tag}_pods.csv"), "w", newline="")
+    pods_w = csv.writer(pods_f)
+    pods_w.writerow(["step", "pod", "created_s", "ready_s", "readiness_delay_s"])
+    try:
+        run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w)
+    finally:
+        pods_f.close()
+        if args.live:
+            cluster.scale(2)                 # leave the deployment at its default size
+    print(f"{tag}: {args.steps} steps in {time.time() - t0:.0f}s -> {out_dir}/{tag}.csv")
+
+
+def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w):
     with open(os.path.join(out_dir, f"{tag}.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
@@ -215,7 +284,9 @@ def main():
             rps = lf * cpu_int * args.max_rps
             summ, achieved = cluster.load_window(rps)
             ready, requested = cluster.replicas()
-            used = cluster.cpu_used()
+            used, age, window, n_met = cluster.cpu_used()
+            for name, created, ready, delay in cluster.new_ready_pods():
+                pods_w.writerow([step, name, round(created - t0, 1), round(ready - t0, 1), round(delay, 1)])
             rho = used / max(ready * cluster.cpu_req, 1.0)
             lat = summ["mean_ms"] if summ["n"] and not np.isnan(summ["mean_ms"]) else 5000.0
             success = summ["success"] if summ["n"] else 0.0
@@ -235,14 +306,14 @@ def main():
             w.writerow(dict(step=step, wall_s=round(ts - t0, 3), load_frac=lf, rps_target=round(rps, 1),
                             rps_achieved=round(achieved, 1), n_requests=summ["n"], latency_mean_ms=lat,
                             latency_p50_ms=summ["p50_ms"], latency_p95_ms=summ["p95_ms"], latency_p99_ms=summ["p99_ms"],
-                            success=success, cpu_used_m=used, rho=rho, cpu_util=min(rho, 1.5), ready_replicas=ready,
+                            success=success, cpu_used_m=used, metrics_age_s=round(age, 1),
+                            metrics_window_s=round(window, 1), pods_with_metrics=n_met, rho=rho, cpu_util=min(rho, 1.5), ready_replicas=ready,
                             requested_replicas=requested, cpu_req=cluster.cpu_req, steps_to_ready=s.steps_to_ready,
                             sla_ok=int(lat < SLA_MEAN_LATENCY_MS and success >= 0.99),
                             cost_vcpu=ready * cluster.cpu_req / 1000.0, d_rep=d,
                             mu_minus=mu[0], mu_zero=mu[1], mu_plus=mu[2], act_s=round(act_s, 3)))
             if args.live:
                 time.sleep(max(0.0, ts + args.period - time.time()))
-    print(f"{tag}: {args.steps} steps in {time.time() - t0:.0f}s -> {out_dir}/{tag}.csv")
 
 
 if __name__ == "__main__":
