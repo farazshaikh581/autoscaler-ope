@@ -172,3 +172,96 @@ binary in `.gitattributes`, so they are not diffed); pandas reads them directly.
 Small summary tables stay as plain CSV in `results/`. `.deps/` holds scikit-learn
 and scipy installed with `uv pip install --target .deps --no-deps` (numpy comes from
 the venv) and is not committed.
+
+## M2: estimators for large policy changes
+
+Run: `python run_m2.py --procs 8 && python analyse_m2.py && python plot_m2.py`
+(about 12 min on 8 cores).
+
+**Setup**
+
+- Logs are the same as M1b's (same cells, episode seeds and dither seeds) at
+  eps = 0, 0.05 and 0.1, with five logging seeds each.
+- The logger also records what an operator sees after each decision: serving and
+  requested replicas, CPU request, steps until a pending scale lands, latency,
+  success, CPU utilisation and rho.
+- *Model-based replay (MB)* (`ope/model.py`, `ope/mb.py`). The model is fitted to
+  the log only. The load sequence is exogenous and taken from the log. The
+  replica mechanics are treated as known platform semantics: +/-1 per decision,
+  bounds 1-12, a 2-step readiness delay. Each target is rolled forward from every
+  logged episode start, and the SLA and cost of the predicted trajectory are
+  scored. Two outcome models:
+  - `mb_trees`: gradient-boosted trees (scikit-learn HistGradientBoosting, 300
+    iterations) on (load, replicas, cpu_req, steps_to_ready, pending), one per
+    output. The trees only split on their per-feature bin edges, so they are
+    evaluated through an exact lookup table over the bin grid (checked equal to
+    `predict`).
+  - `mb_knee`: latency and success as a sigmoid knee in load per vCPU, rho linear
+    in it, fitted with `curve_fit`. Caveat: this functional form matches the
+    simulator's own, which the author had read, so `mb_knee` is an optimistic
+    case. `mb_trees` is the generic one.
+- *Windowed DR* (`dr_k2/4/8`): per-decision DR over the last k decisions with
+  self-normalised weights. The baseline is `mb_trees`, using k-step rollouts
+  from every logged state, both under the target and with the logged action
+  first. Run at n = 200 only.
+- Errors are against the paired truth. `results/raw/m2_vs_replay.csv.gz` holds
+  the bootstrap of |err| - |err_replay|; it is conditional on the fitted model
+  and on DR's normalising constants.
+
+**Findings** (n = 200; "main cells" = 4 workloads x 8 targets; numbers are
+median / max over cells of the error averaged over five logging seeds)
+
+- *MB fixes the large shifts.* On Bitbrains io-bound, replay's SLA error is 30
+  points (HPA-90) and 42 points (HPA-95) at eps = 0.1; with MB it is 1.8 / 0.7
+  (trees) and 1.6 / 1.2 (knee). MB's cost error is 0.2-0.3% (trees) and 0.0%
+  (knee), against replay's 26-33%. Windowed DR cannot do this: its window starts
+  from the behaviour's state, so it keeps the truncation bias (k = 8 still errs
+  by 12-19 points).
+- *Overall at eps = 0.1, all steps, SLA points:*
+
+  | Estimator | Median | Max |
+  |---|---|---|
+  | replay | 0.76 | 42.4 |
+  | SN truncated PDIS k=4 | 0.80 | 38.4 |
+  | MB trees | 1.23 | 4.3 |
+  | MB knee | 0.64 | 3.1 |
+  | DR k=4 | 0.26 | 31.6 |
+  | DR k=8 | 0.19 | 18.7 |
+
+  DR has the lowest median, because it corrects the model's bias on small
+  shifts. MB has by far the lowest maximum.
+- *MB has a bias floor of about 3 SLA points.* On the sanity target HPA-70, MB
+  errs by up to 2.9 (trees) and 3.05 (knee) points; DR and IS by 0.1-0.5. The
+  model's small errors around the SLA threshold add up over the rollout.
+- *MB-trees is fragile for a controller with a knife-edge rule.* The SLO-cost
+  target scales in only when its violation measure is exactly 0, i.e. predicted
+  success is exactly 1.0. The trees predict 0.993-0.999 where the truth is 1.0,
+  so in the rollout the target never scales in. On Azure io-bound this gives 3.3
+  replicas against a true 1.2, a cost error of 171% (87% on Azure cpu-bound,
+  36% on Bitbrains cpu-bound). The knee model reproduces success = 1.0 exactly,
+  by construction. This was not tuned away.
+- *No estimator gets every main cell within 3 SLA points and 15% cost at
+  eps = 0.1:*
+  - MB-knee misses 7 cells, all on Azure io-bound at 3.0-3.1 SLA points, which
+    is its bias floor.
+  - MB-trees misses 4: the SLO-cost cost blow-ups, plus Azure io-bound
+    predictive-70 at 18% cost.
+  - SN truncated PDIS and DR k=4/8 each miss 3: the hard cells.
+  - On high-load steps all estimators miss 5-13 cells.
+- *Dithering does not help MB here.* MB's error is flat in eps: median 1.02 /
+  1.06 / 1.23 (trees) and 0.66 / 0.64 / 0.64 (knee) at eps = 0 / 0.05 / 0.1, and
+  the hard cells are just as good at eps = 0. Even without dither, the HPA's logs
+  span replicas 1-12 in most cells (Azure io-bound 1-6, Bitbrains io-bound
+  2-12): load swings and the 2-step delay already decouple replicas from load,
+  so the (load, replicas) region the targets visit is covered. The hypothesis
+  "a little randomness makes the learned model identifiable" is not supported
+  in this simulator; it may hold where the behaviour's replicas track load
+  tightly.
+- *Learning curve:* MB is as accurate with 10 logged episodes as with 200
+  (median 0.47-1.1 SLA points across n = 10/50/200). The simulator is
+  deterministic and low-dimensional, so this is optimistic for a real system.
+
+Files: `results/m2_summary.csv`, `m2_hard_cells.csv`, `m2_gate.csv`,
+`m2_learning_curve.csv`, `m2_model_fit.csv` (knee parameters and logged replica
+range per log), `m2_summary.png`, and `raw/m2_estimates.csv.gz` /
+`raw/m2_vs_replay.csv.gz`.

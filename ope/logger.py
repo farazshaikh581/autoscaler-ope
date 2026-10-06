@@ -5,6 +5,13 @@ from .policies import DitheredHPA
 from .sim import D_REPS, EPISODE_LEN, M_KEYS, make_env, outcome, snapshot, step_action
 
 
+# Observed after each step: serving replicas, requested replicas, CPU request,
+# steps until a pending scale lands, and the observed metrics.
+OUT_DTYPE = np.dtype([("replicas", "i4"), ("target_replicas", "i4"), ("cpu_req", "i4"),
+                      ("steps_to_ready", "i4"), ("latency", "f8"), ("success", "f8"),
+                      ("cpu_util", "f8"), ("rho", "f8")])
+
+
 def collect(workload: str, eps: float, episode_seeds: list[int], dither_seed,
             episode_len: int = EPISODE_LEN) -> dict:
     """Run the behaviour for one episode per seed. Step t holds the context the
@@ -16,7 +23,7 @@ def collect(workload: str, eps: float, episode_seeds: list[int], dither_seed,
     log = dict(workload=workload, eps=eps, seeds=np.asarray(episode_seeds),
                d_rep=np.zeros((n, T), np.int8), mu=np.zeros((n, T, 3)),
                sla=np.zeros((n, T)), cost=np.zeros((n, T)), latency=np.zeros((n, T)),
-               load=np.zeros((n, T)),
+               load=np.zeros((n, T)), out=np.zeros((n, T), dtype=OUT_DTYPE),
                m=[], s=[])
     for i, seed in enumerate(episode_seeds):
         _, info = env.reset(seed=int(seed))
@@ -34,6 +41,9 @@ def collect(workload: str, eps: float, episode_seeds: list[int], dither_seed,
             log["mu"][i, t] = p
             log["sla"][i, t], log["cost"][i, t], log["latency"][i, t] = outcome(m, env._backend.s)
             log["load"][i, t] = m["load_frac"]      # exogenous: same under any policy
+            so = env._backend.s                      # what an operator sees after the step
+            log["out"][i, t] = (so.replicas, so.target_replicas, so.cpu_req, so.steps_to_ready,
+                                m["latency"], m["success"], m["cpu_util"], m["rho"])
             if term or trunc:
                 assert t == T - 1
         log["m"].append(ms)
@@ -50,7 +60,7 @@ def logged_prob(log: dict) -> np.ndarray:
 
 def subset(log: dict, n: int) -> dict:
     """The first n episodes of a log (logs are nested across n_episodes)."""
-    return {k: (v[:n] if k in ("seeds", "d_rep", "mu", "sla", "cost", "latency", "load", "m", "s") else v)
+    return {k: (v[:n] if k in ("seeds", "d_rep", "mu", "sla", "cost", "latency", "load", "out", "m", "s") else v)
             for k, v in log.items()}
 
 
