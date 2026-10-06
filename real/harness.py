@@ -304,7 +304,7 @@ def main():
     pods_w = csv.writer(pods_f)
     pods_w.writerow(["step", "pod", "created_s", "ready_s", "readiness_delay_s"])
     try:
-        run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w)
+        run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w, pods_f.flush)
     finally:
         pods_f.close()
         if args.live:
@@ -312,7 +312,7 @@ def main():
     print(f"{tag}: {args.steps} steps in {time.time() - t0:.0f}s -> {out_dir}/{tag}.csv")
 
 
-def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w):
+def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, pods_w, pods_flush):
     with open(os.path.join(out_dir, f"{tag}.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
@@ -325,6 +325,7 @@ def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, 
             used, age, window, n_met = cluster.cpu_used()
             for pod, created_at, ready_at, delay in cluster.new_ready_pods():   # distinct names: `ready` is the replica count
                 pods_w.writerow([step, pod, round(created_at - t0, 1), round(ready_at - t0, 1), round(delay, 1)])
+                pods_flush()
             rho = used / max(ready * cluster.cpu_req, 1.0)
             lat = summ["mean_ms"] if summ["n"] and not np.isnan(summ["mean_ms"]) else 5000.0
             success = summ["success"] if summ["n"] else 0.0
@@ -350,6 +351,7 @@ def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, 
                             sla_ok=int(lat < SLA_MEAN_LATENCY_MS and success >= 0.99),
                             cost_vcpu=ready * cluster.cpu_req / 1000.0, d_rep=d,
                             mu_minus=mu[0], mu_zero=mu[1], mu_plus=mu[2], act_s=round(act_s, 3)))
+            f.flush()                          # unattended runs: every row on disk at once
             if args.live:
                 time.sleep(max(0.0, ts + args.period - time.time()))
 

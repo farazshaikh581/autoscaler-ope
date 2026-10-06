@@ -1,0 +1,3 @@
+step,wall_s,load_frac,rps_target,rps_achieved,n_requests,latency_mean_ms,latency_p50_ms,latency_p95_ms,latency_p99_ms,success,cpu_used_m,metrics_age_s,metrics_window_s,pods_with_metrics,rho,cpu_util,ready_replicas,requested_replicas,cpu_req,steps_to_ready,sla_ok,cost_vcpu,d_rep,mu_minus,mu_zero,mu_plus,act_s
+0,0.0,0.4472108483314514,458.4,458.0,5496,2.506782479947358,2.4230830022133887,2.925291017163545,4.092780000064522,1.0,0.847491,14.9,17.6,2,0.0021187275,0.0021187275,2,2,200,0,1,0.4,0,0.0,1.0,0.0,0.0
+1,15.003,0.3541179895401001,363.0,362.0,4344,2.457608900684799,2.4069329956546426,2.7012699865736067,5.042782984673977,1.0,545.257963,2.9,23.3,2,1.3631449075,1.3631449075,2,2,200,0,1,0.4,1,0.0,0.0,1.0,0.129
