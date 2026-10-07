@@ -1,0 +1,9 @@
+[2026-10-07T08:57:44Z] pilot start (pid 403667)
+[2026-10-07T08:57:44Z] W1 hpa70: start
+pilot_w1_hpa70: 200 steps in 3058s -> /home/labtlc/autoscaler-ope/real/runs/pilot_w1_hpa70.csv
+[2026-10-07T09:49:47Z] W1 hpa70: done
+[2026-10-07T09:49:47Z] W1 hpa95: start
+pilot_w1_hpa95: 200 steps in 6650s -> /home/labtlc/autoscaler-ope/real/runs/pilot_w1_hpa95.csv
+[2026-10-07T11:42:14Z] W1 hpa95: done
+[2026-10-07T11:42:15Z] report: real/runs/pilot_report.md
+[2026-10-07T11:42:15Z] PILOT DONE
