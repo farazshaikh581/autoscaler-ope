@@ -1,0 +1,4 @@
+step,pod,created_s,ready_s,readiness_delay_s
+4,web-service-787bccf486-jb8s9,58.1,67.1,9.0
+8,web-service-787bccf486-fzfgc,118.1,127.1,9.0
+18,web-service-787bccf486-w6gzt,268.1,276.1,8.0
