@@ -198,7 +198,7 @@ Run: `python run_m2.py --procs 8 && python analyse_m2.py && python plot_m2.py`
     `predict`).
   - `mb_knee`: latency and success as a sigmoid knee in load per vCPU, rho linear
     in it, fitted with `curve_fit`. Caveat: this functional form matches the
-    simulator's own, which the author had read, so `mb_knee` is an optimistic
+    simulator's own, so `mb_knee` is an optimistic
     case. `mb_trees` is the generic one.
 - *Windowed DR* (`dr_k2/4/8`): per-decision DR over the last k decisions with
   self-normalised weights. The baseline is `mb_trees`, using k-step rollouts

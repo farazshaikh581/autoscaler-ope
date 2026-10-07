@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # M4 pilot, detached: W1 HPA-70 then W1 HPA-95 (one live run each), then the webhook
-# pin requested by the node0 session (only in this gap, no live run active), then the
+# pin from the VPA install procedure (only in this gap, no live run active), then the
 # gate report. Survives logout:
 #   setsid nohup real/pilot.sh > real/runs/pilot.log 2>&1 < /dev/null &
 set -uo pipefail
@@ -20,7 +20,7 @@ for pol in hpa70 hpa95; do
   log "W1 $pol: done"
 done
 
-# Webhook pin (node0 session's request, b578fff): only now, with no live run active.
+# Webhook pin (VPA install procedure, joint_hv_autoscaler b578fff): only now, with no live run active.
 if pgrep -f "real/harness.py --live" >/dev/null; then
   log "webhook pin skipped: a live harness is still running"
 else
@@ -32,7 +32,7 @@ else
   after=$(kubectl get mutatingwebhookconfiguration vpa-webhook-config -o jsonpath='{.webhooks[0].namespaceSelector}')
   log "webhook selector before: $before"
   log "webhook selector after 60 s: $after"
-  echo "| $(date -u '+%Y-%m-%d %H:%M') | VPA webhook namespaceSelector pinned to In [hv-phase0] (node0 request, after pilot runs); after 60 s: $after | - |" >> real/RUNLOG.md
+  echo "| $(date -u '+%Y-%m-%d %H:%M') | VPA webhook namespaceSelector pinned to In [hv-phase0] (install procedure, after pilot runs); after 60 s: $after | - |" >> real/RUNLOG.md
 fi
 
 "$PY" real/pilot_report.py > real/runs/pilot_report.md 2>&1 && log "report: real/runs/pilot_report.md"

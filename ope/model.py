@@ -10,7 +10,7 @@ latency, success, CPU utilisation and rho (demand / capacity).
 
 KneeModel's functional form is generic queueing intuition (latency flat, then a
 knee once load per unit of capacity passes a threshold). It also happens to match
-the simulator's own family, which the author had read, so its results are an
+the simulator's own family, so its results are an
 optimistic case.
 """
 import os
