@@ -96,14 +96,17 @@ class LiveCluster:
         return int(d.get("status", {}).get("readyReplicas", 0) or 0), int(d["spec"]["replicas"])
 
     def cpu_used(self):
-        """Total pod CPU from the metrics API (what kubectl top shows), with the age of
-        the newest sample and its averaging window, so the metric lag is measured."""
+        """Total CPU of the serving pods (Ready, not terminating) from the metrics API,
+        with the age of the newest sample, its averaging window and the pod count, as
+        the HPA counts them: a terminating pod's usage must not land on fewer ready pods."""
         try:
             raw = kubectl(["get", "--raw", f"/apis/metrics.k8s.io/v1beta1/namespaces/{NS}/pods"
                            f"?labelSelector=app%3D{DEPLOY}"])
             items = json.loads(raw)["items"]
         except (RuntimeError, ValueError, KeyError):
             return float("nan"), float("nan"), float("nan"), 0
+        live = self.serving_pods()
+        items = [it for it in items if it["metadata"]["name"] in live]
         if not items:
             return float("nan"), float("nan"), float("nan"), 0
         try:
@@ -115,6 +118,14 @@ class LiveCluster:
             print(f"  [warn] metrics parse: {e}")
             return float("nan"), float("nan"), float("nan"), 0
         return used, min(ages), float(np.mean(windows)), len(items)
+
+    def serving_pods(self):
+        try:
+            pods = kubectl_json(["get", "pods", "-n", NS, "-l", SELECTOR])["items"]
+        except RuntimeError:
+            return set()
+        return {p["metadata"]["name"] for p in pods if not p["metadata"].get("deletionTimestamp")
+                and any(c["type"] == "Ready" and c["status"] == "True" for c in p.get("status", {}).get("conditions", []))}
 
     def new_ready_pods(self):
         """Pods that became Ready since the last call: (name, created, ready, delay_s)."""
@@ -350,7 +361,7 @@ def run_steps(args, cluster, policy, dithered, load, cpu_int, out_dir, tag, t0, 
             for pod, created_at, ready_at, delay in cluster.new_ready_pods():   # distinct names: `ready` is the replica count
                 pods_w.writerow([step, pod, round(created_at - t0, 1), round(ready_at - t0, 1), round(delay, 1)])
                 pods_flush()
-            rho = used / max(ready * cluster.cpu_req, 1.0)
+            rho = used / (n_met * cluster.cpu_req) if n_met else float("nan")   # over the pods measured
             lat = summ["mean_ms"] if summ["n"] and not np.isnan(summ["mean_ms"]) else 5000.0
             success = summ["success"] if summ["n"] else 0.0
             m = dict(load_frac=lf, rho=rho, latency=lat, success=success, cpu_util=min(rho, 1.5), mem_pressure=0.0)

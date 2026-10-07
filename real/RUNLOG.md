@@ -16,3 +16,5 @@
 | 2026-10-07 09:49 | OPE harness pilot_w1_hpa95: hpa95 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-07 10:42 |
 | 2026-10-07 11:44 | Overnight batch NOT started: re-pilot (200m) gate (b) PASS 67.5 pts, gate (e) FAIL (step overruns: hpa70 18, hpa95 199). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
 | 2026-10-07 12:05 | OPE harness smoke_hard_w1_hpa95: hpa95 eps=0, bitbrains/io-bound start 4725, 20 steps x 15s, CPU limit 200m | 2026-10-07 12:13 |
+| 2026-10-07 12:12 | OPE harness on_w1_log_eps0.1_r1: dithered eps=0.1, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-07 13:05 |
+| 2026-10-07 12:14 | Overnight batch STOPPED during run 1 (on_w1_log_eps0.1_r1, SIGTERM, scaled back to 2) to fix rho counting terminating pods; partial run in real/runs/aborted/ | - |
