@@ -3,12 +3,12 @@
   # dry run (default): the simulator stands in for the cluster, kubectl commands are printed
   python real/harness.py --policy dithered --eps 0.1 --family bitbrains --workload io-bound --start 1234
   # live run: only after E1 has finished AND the go is given
-  python real/harness.py --live --policy hpa90 --family bitbrains --workload io-bound --start 1234 --tag w1_hpa90_r0
+  python real/harness.py --live --policy hpa85 --family bitbrains --workload io-bound --start 1234 --tag w1_hpa85_r0
 
 Each step (period P = 15 s):
   1. drive HTTP load at rps = load_frac[t] * cpu_intensity * max_rps for L seconds
-     (phase1/loadgen.py, the calibrated multi-process driver) and summarise the
-     window: mean / p50 / p95 / p99 latency, success, achieved rps;
+     (real/windowload.py: the phase1/loadgen.py pacing with a hard window end;
+     unfinished requests count as failures) and summarise the window: mean / p50 / p95 / p99 latency, success, achieved rps;
   2. observe: ready and requested replicas (kubectl get deploy), CPU used
      (kubectl top pods), rho = used / (ready * cpu_req), cpu_util = min(rho, 1.5);
   3. decide with the policy (dithered HPA with exact action probabilities, or a
@@ -37,7 +37,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, REPO)
-from ope.policies import TARGETS_M1B, SANITY_TARGETS, DitheredHPA  # noqa: E402
+from ope.policies import REAL_TARGETS, DitheredHPA  # noqa: E402
 from ope.sim import D_REPS, PHASE1, SLA_MEAN_LATENCY_MS, sim_commit, use_family  # noqa: E402
 
 PHASE0 = os.path.join(os.path.dirname(PHASE1), "phase0")
@@ -51,7 +51,7 @@ NS, DEPLOY, SELECTOR = "hv-phase0", "web-service", "app=web-service"
 REPLICA_LO, REPLICA_HI = 1, 12
 CPU_REQ_M = 200                      # web-service.yaml request; read live in --live mode
 CPU_LIMIT = "200m"                   # OPE runs: limit = request, as in the sim's knee calibration (set by hand)
-TARGETS = {**TARGETS_M1B, **SANITY_TARGETS}
+TARGETS = REAL_TARGETS
 FIELDS = ["step", "wall_s", "load_frac", "rps_target", "rps_achieved", "n_requests",
           "latency_mean_ms", "latency_p50_ms", "latency_p95_ms", "latency_p99_ms", "success",
           "cpu_used_m", "metrics_age_s", "metrics_window_s", "pods_with_metrics", "rho", "cpu_util", "ready_replicas", "requested_replicas", "cpu_req",
@@ -64,7 +64,8 @@ class LiveCluster:
         svc = kubectl_json(["get", "svc", DEPLOY, "-n", NS])
         self.url = f"http://{svc['spec']['clusterIP']}:{svc['spec']['ports'][0]['port']}/"
         self.load_seconds = load_seconds
-        from loadgen import run_load, summarize
+        from load import summarize
+        from windowload import run_load       # hard 12 s window: a saturated step stays inside 15 s
         self._run_load, self._summarize = run_load, summarize
         self.cpu_req = self._cpu_req()
         self._seen = set()

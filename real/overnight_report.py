@@ -22,12 +22,12 @@ from ope.estimators import all_estimates, ratios  # noqa: E402
 from ope.logger import logged_prob  # noqa: E402
 from ope.mb import dr_mb_per_step, dr_per_step, mb_estimate, mb_logged, shadow_with_snapshots, window_q  # noqa: E402
 from ope.model import TreeModel, training_data  # noqa: E402
-from ope.policies import SANITY_TARGETS, TARGETS_M1B  # noqa: E402
+from ope.policies import REAL_TARGETS  # noqa: E402
 from ope.sim import make_env, outcome, step_action, use_family  # noqa: E402
 from realog import load_run, readiness_delay_steps, to_log, truth  # noqa: E402
 from run_m3 import bias_terms  # noqa: E402
 
-TARGETS = {**TARGETS_M1B, **SANITY_TARGETS}
+TARGETS = REAL_TARGETS
 WINDOWS = {"w1": ("bitbrains", "io-bound", 4725), "w2": ("azure", "cpu-bound", 1200)}
 ESTIMATORS = ["replay", "sntpdis_k4", "mb_trees", "mbcalq_trees", "drmb_k4"]
 SLA_GATE, COST_GATE = 3.0, 15.0
@@ -202,7 +202,7 @@ def main():
         if "hpa70" in live and live["hpa70"]["runs"] > 1:
             print(f"- HPA-70 repeated runs (pilot and eps=0 logs): SLA {live['hpa70']['sla_list']}")
         print("- Truth for the other targets is a single live run each, so its own noise is not estimated.")
-        print("- Real vs simulator: CPU limit = request = 200m as in the sim calibration; readiness within one step "
+        print("- Real vs simulator: CPU limit = request = 200m as in the sim calibration; load windows hard-stopped at 12 s (unfinished requests fail); readiness within one step "
               "(sim: 2); load is windowed (12 s on, ~3 s off); CPU comes from metrics-server with a 10-25 s lag "
               "and a ~15 s window; latency is real HTTP latency; 4 workers schedulable; one trace window per workload.\n")
 

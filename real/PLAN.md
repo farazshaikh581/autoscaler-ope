@@ -8,8 +8,9 @@ while E1's runner is alive or any HPA/VPA object exists in hv-phase0.
 
 - Every 15 s it does one control step:
   1. Drive the CPU-burn web-service at rps = load_frac x cpu_intensity x 2050
-     for 12 s, using the calibrated multi-process load generator
-     (`phase1/loadgen.py`).
+     for 12 s (`real/windowload.py`: the `phase1/loadgen.py` pacing with a hard
+     window end; request timeouts are capped at the time left in the window and
+     unfinished requests count as failures, so a saturated step stays within 15 s).
   2. Read ready and requested replicas (`kubectl get deploy`) and pod CPU
      (`kubectl top`).
   3. Let the policy decide, seeing the same m / s fields as in the simulator.
@@ -19,8 +20,16 @@ while E1's runner is alive or any HPA/VPA object exists in hv-phase0.
 - Policies:
   - `dithered`: the logging policy, HPA u = 0.7, stabilisation 3, eps dither;
     logs exact action probabilities.
-  - Any target name (hpa30/50/90/95, hpa70_stab0/10, slo_cost, pred70, hpa70) for
-    ground-truth runs. Same controller code as the simulator.
+  - Any target name (hpa30/50/85/95, hpa70_stab0/10, slo_cost, pred70, hpa70) for
+    ground-truth runs. Same controller code as the simulator. On the real cluster
+    hpa85 replaces the simulation's hpa90 on both windows.
+  - **hpa95 is degenerate under limit = request:** measured utilisation is capped
+    at 100% of the request, and 1/0.95 = 1.053 is inside the HPA's 10% tolerance,
+    so it never scales up. It stays in the target set as a never-scale-up policy.
+- web-service runs with CPU limit = request = 200m for OPE runs (the simulator's
+  knee calibration). The harness refuses to start otherwise and records the limit.
+  Knee check: latency midpoint at demand rho 0.944 (sim 0.91), 20 ms SLA crossed
+  at 0.900 (`real/runs/kneecheck.json`).
 - Per-step log, one CSV plus a JSON of metadata per run under `real/runs/`:
   - trace step and load;
   - target and achieved rps, request count;
@@ -77,9 +86,8 @@ Otherwise re-pick the window or the rps scale before spending 20+ h.
 
 ## Known differences from the simulator (why M4 matters)
 
-- **Capacity:** real pods can burst to their 500m limit, 2.5x the 200m request,
-  while the simulator's knee is defined on the request. The real targets may
-  differ less than simulated, which the pilot checks.
+- **Capacity:** with the 500m limit pods burst to 2.5x the request and the first
+  pilot showed no SLA gap (both 100%); OPE runs therefore use limit = request.
 - **Readiness delay:** the image is cached, so it may be shorter than the
   simulator's 2 steps. It is measured from the logs (ready vs requested).
 - **Load gaps and CPU lag:** the load is windowed (12 s on, about 3 s off), and

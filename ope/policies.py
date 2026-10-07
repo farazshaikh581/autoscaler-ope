@@ -58,6 +58,12 @@ TARGETS_M1B = {
 # unbiased for it at any eps, including eps = 0.
 SANITY_TARGETS = {"hpa70": lambda: ClassicalController(vpa=False, target_util=BEHAVIOUR_UTIL)}
 
+# M4 (real cluster, CPU limit = request): hpa90 is replaced by hpa85. hpa95 stays,
+# but is degenerate there: utilisation is capped at 1.0 and 1/0.95 is inside the 10%
+# tolerance, so it never scales up.
+REAL_TARGETS = {**{k: v for k, v in TARGETS_M1B.items() if k != "hpa90"},
+                "hpa85": lambda: ClassicalController(vpa=False, target_util=0.85), **SANITY_TARGETS}
+
 
 class DitheredHPA:
     """HPA at u=0.70 whose replica delta is, with probability eps, replaced by a
