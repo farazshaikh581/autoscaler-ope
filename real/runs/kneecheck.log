@@ -1,1 +1,10 @@
 {"rps": 130, "achieved": 130.0, "mean_ms": 2.641, "p99_ms": 3.325, "success": 1.0, "cpu_m": 224.043, "cpu_samples": 6, "rho_meas": 0.56}
+{"rps": 173, "achieved": 173.0, "mean_ms": 2.551, "p99_ms": 5.461, "success": 1.0, "cpu_m": 300.627, "cpu_samples": 5, "rho_meas": 0.752}
+{"rps": 184, "achieved": 184.0, "mean_ms": 3.031, "p99_ms": 6.424, "success": 1.0, "cpu_m": 316.552, "cpu_samples": 7, "rho_meas": 0.791}
+{"rps": 190, "achieved": 190.0, "mean_ms": 2.788, "p99_ms": 9.441, "success": 1.0, "cpu_m": 327.681, "cpu_samples": 6, "rho_meas": 0.819}
+{"rps": 197, "achieved": 197.0, "mean_ms": 3.824, "p99_ms": 27.308, "success": 1.0, "cpu_m": 340.073, "cpu_samples": 5, "rho_meas": 0.85}
+{"rps": 203, "achieved": 203.0, "mean_ms": 5.61, "p99_ms": 41.033, "success": 1.0, "cpu_m": 348.747, "cpu_samples": 4, "rho_meas": 0.872}
+{"rps": 210, "achieved": 210.0, "mean_ms": 24.118, "p99_ms": 1032.956, "success": 1.0, "cpu_m": 362.559, "cpu_samples": 6, "rho_meas": 0.906}
+{"rps": 216, "achieved": 216.0, "mean_ms": 159.811, "p99_ms": 2282.867, "success": 1.0, "cpu_m": 382.328, "cpu_samples": 6, "rho_meas": 0.956}
+{"rps": 227, "achieved": 227.0, "mean_ms": 479.323, "p99_ms": 4126.25, "success": 0.987, "cpu_m": 390.158, "cpu_samples": 7, "rho_meas": 0.975}
+m_per_rps 1.727, L0 2.7 ms, top level 479 ms; knee (latency midpoint) at demand rho 0.944, 20 ms SLA crossed at 0.900; sim 0.91

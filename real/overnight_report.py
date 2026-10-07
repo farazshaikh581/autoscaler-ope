@@ -31,7 +31,7 @@ TARGETS = {**TARGETS_M1B, **SANITY_TARGETS}
 WINDOWS = {"w1": ("bitbrains", "io-bound", 4725), "w2": ("azure", "cpu-bound", 1200)}
 ESTIMATORS = ["replay", "sntpdis_k4", "mb_trees", "mbcalq_trees", "drmb_k4"]
 SLA_GATE, COST_GATE = 3.0, 15.0
-PILOT_HARNESS_COMMIT = "d8d8e99"
+PILOT_HARNESS_COMMIT = "c7e0679"
 
 
 def blob(rev_path):
