@@ -23,9 +23,14 @@ while E1's runner is alive or any HPA/VPA object exists in hv-phase0.
   - Any target name (hpa30/50/85/95, hpa70_stab0/10, slo_cost, pred70, hpa70) for
     ground-truth runs. Same controller code as the simulator. On the real cluster
     hpa85 replaces the simulation's hpa90 on both windows.
-  - **hpa95 is degenerate under limit = request:** measured utilisation is capped
-    at 100% of the request, and 1/0.95 = 1.053 is inside the HPA's 10% tolerance,
-    so it never scales up. It stays in the target set as a never-scale-up policy.
+  - **hpa95 under limit = request with 12 s windows** (smoke `smoke_hard2_w1_hpa95`,
+    W1, 20 steps): measured utilisation stays at 0.70-0.93 of the request while the
+    service is saturated (success 0.25-0.6, mean latency 280-820 ms), because CPU
+    is capped at the limit and the 12 s on / 3 s off load and metrics-server's
+    averaging pull the reading down. HPA-95's scale-up threshold is 0.95 x 1.1 =
+    1.045, which is never reached. It scaled in once (2 -> 1 after 3 steps below
+    0.855) and then stayed at 1 replica with rho 0.77-0.93 to the end. It has no
+    real signal to scale back up.
 - web-service runs with CPU limit = request = 200m for OPE runs (the simulator's
   knee calibration). The harness refuses to start otherwise and records the limit.
   Knee check: latency midpoint at demand rho 0.944 (sim 0.91), 20 ms SLA crossed
