@@ -22,8 +22,8 @@ while ! grep -q "PILOT DONE" real/runs/pilot.log 2>/dev/null; do
 done
 log "pilot done; gate check"
 if ! "$PY" real/gate_check.py; then
-  log "GATE FAILED ((a) load or (e) harness): batch not started"
-  echo "# Overnight batch NOT started: pilot gate (a) or (e) failed. See real/runs/overnight.log and pilot_report.md." \
+  log "GATE FAILED ((a) load, (b) SLA gap or (e) harness): batch not started"
+  echo "# Overnight batch NOT started: pilot gate (a), (b) or (e) failed. See real/runs/overnight.log and pilot_report.md." \
     > real/runs/overnight_report.md
   exit 1
 fi

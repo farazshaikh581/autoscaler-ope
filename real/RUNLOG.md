@@ -11,3 +11,4 @@
 | 2026-10-06 16:43 | OPE harness pilot_w1_hpa95: hpa95 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s | 2026-10-06 17:36 |
 | 2026-10-06 17:30 | VPA webhook namespaceSelector pinned to In [hv-phase0] (install procedure, after pilot runs); after 60 s: {"matchExpressions":[{"key":"kubernetes.io/metadata.name","operator":"In","values":["hv-phase0"]}]} | - |
 | 2026-10-06 17:31 | Overnight batch NOT started: pilot gate (e) failed (pilot_w1_hpa95 crashed at row 177 on a '803ms' metrics window; fixed in 64c7d14, not relaunched). Gate (b): live HPA-70 vs HPA-95 SLA gap 0.0 pts (both 100%; sim 60.5). Cluster idle, web-service 2/2. | - |
+| 2026-10-07 08:45 | OPE knee check: 2 replicas, CPU limit 200m, 9 rps levels | 2026-10-07 08:59 |

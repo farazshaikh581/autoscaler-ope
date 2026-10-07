@@ -202,7 +202,7 @@ def main():
         if "hpa70" in live and live["hpa70"]["runs"] > 1:
             print(f"- HPA-70 repeated runs (pilot and eps=0 logs): SLA {live['hpa70']['sla_list']}")
         print("- Truth for the other targets is a single live run each, so its own noise is not estimated.")
-        print("- Real vs simulator: pods burst to the 500m limit (2.5x request); readiness within one step "
+        print("- Real vs simulator: CPU limit = request = 200m as in the sim calibration; readiness within one step "
               "(sim: 2); load is windowed (12 s on, ~3 s off); CPU comes from metrics-server with a 10-25 s lag "
               "and a ~15 s window; latency is real HTTP latency; 4 workers schedulable; one trace window per workload.\n")
 

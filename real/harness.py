@@ -50,6 +50,7 @@ from envs.joint_hv_env import INTENSITY, JointHVEnv, trace_dir  # noqa: E402
 NS, DEPLOY, SELECTOR = "hv-phase0", "web-service", "app=web-service"
 REPLICA_LO, REPLICA_HI = 1, 12
 CPU_REQ_M = 200                      # web-service.yaml request; read live in --live mode
+CPU_LIMIT = "200m"                   # OPE runs: limit = request, as in the sim's knee calibration (set by hand)
 TARGETS = {**TARGETS_M1B, **SANITY_TARGETS}
 FIELDS = ["step", "wall_s", "load_frac", "rps_target", "rps_achieved", "n_requests",
           "latency_mean_ms", "latency_p50_ms", "latency_p95_ms", "latency_p99_ms", "success",
@@ -227,6 +228,11 @@ def runlog(what, expected_s):
         f.write(f"| {fmt(now)} | {what} | {fmt(now + expected_s)} |\n")
 
 
+def live_cpu_limit():
+    return kubectl(["get", "deploy", DEPLOY, "-n", NS, "-o",
+                    "jsonpath={.spec.template.spec.containers[0].resources.limits.cpu}"]).strip()
+
+
 def _sigterm(signum, frame):
     raise SystemExit(f"terminated by signal {signum}")    # runs the finally: scale back to 2
 
@@ -252,6 +258,9 @@ def preflight_live():
             problems.append(f"{d} args are not the stock profile: {a}")
     state = cluster_state()
     state["vpa_args"] = args
+    state["cpu_limit"] = live_cpu_limit()
+    if state["cpu_limit"] != CPU_LIMIT:
+        problems.append(f"web-service CPU limit is {state['cpu_limit']}, OPE runs need {CPU_LIMIT} (= request)")
     cordoned = [n for n, v in state["nodes"].items() if n.startswith("k8s-worker") and v != "schedulable"]
     if cordoned:
         problems.append(f"workers cordoned: {cordoned} (M4 uses all 4 workers schedulable)")
@@ -311,7 +320,7 @@ def main():
 
     if args.live:
         runlog(f"OPE harness {tag}: {args.policy} eps={args.eps:g}, {args.family}/{args.workload} start "
-               f"{args.start}, {args.steps} steps x {args.period:g}s", args.steps * args.period + 180)
+               f"{args.start}, {args.steps} steps x {args.period:g}s, CPU limit {state['cpu_limit']}", args.steps * args.period + 180)
     cluster.reset()
     t0 = time.time()
     pods_f = open(os.path.join(out_dir, f"{tag}_pods.csv"), "w", newline="")

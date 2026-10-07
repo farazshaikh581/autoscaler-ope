@@ -1,5 +1,5 @@
-"""Pilot gate for the overnight batch: (a) load generator and (e) harness health must
-be clean; (b) the live HPA-70 vs HPA-95 gap is reported, not required.
+"""Pilot gate for the overnight batch: (a) load generator, (e) harness health and
+(b) a live HPA-70 vs HPA-95 SLA gap of at least 10 points are all required.
 Exit 0 = proceed, 1 = stop. Prints one line per item.
 """
 import json
@@ -40,8 +40,10 @@ def main():
     ok &= e
     if all(s.values()):
         gap = s["hpa70"]["sla_pct"] - s["hpa95"]["sla_pct"]
-        print(f"(b) live SLA gap HPA-70 minus HPA-95: {gap:.1f} points" +
-              ("" if gap >= 10 else "  <-- FLAG: under 10 points (proceeding anyway, as instructed)"))
+        print(f"(b) live SLA gap HPA-70 minus HPA-95: {gap:.1f} points: {'PASS' if gap >= 10 else 'FAIL (needs >= 10)'}")
+        ok &= gap >= 10
+    else:
+        ok = False
     sys.exit(0 if ok else 1)
 
 
