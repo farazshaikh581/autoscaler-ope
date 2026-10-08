@@ -1,0 +1,48 @@
+{
+ "live": true,
+ "policy": "dithered",
+ "eps": 0.0,
+ "seed": 20001,
+ "family": "azure",
+ "workload": "cpu-bound",
+ "start": 1200,
+ "steps": 200,
+ "period": 15.0,
+ "load_seconds": 12,
+ "max_rps": 2050.0,
+ "tag": "on_w2_log_eps0_r1",
+ "quiet": false,
+ "cpu_int": 1.0,
+ "sim_commit": "de86f807f1c5dafa3e9a6a3ee5ad9916a21973c5",
+ "cluster": {
+  "nodes": {
+   "k8s-worker1": "schedulable",
+   "k8s-worker2": "schedulable",
+   "k8s-worker3": "schedulable",
+   "k8s-worker4": "schedulable",
+   "saul": "schedulable"
+  },
+  "cpu_affinity": [
+   0,
+   2,
+   4,
+   6,
+   8,
+   10,
+   12,
+   14
+  ],
+  "vpa_args": {
+   "vpa-recommender": [
+    "--vpa-object-namespace=hv-phase0"
+   ],
+   "vpa-updater": [
+    "--vpa-object-namespace=hv-phase0"
+   ]
+  },
+  "cpu_limit": "200m"
+ },
+ "topology": "all 4 workers schedulable",
+ "ope_commit": "e2f1a0abc6e58bfde207ea96889a1d22e85ae2f7",
+ "started": "2026-10-07T22:39:33Z"
+}
