@@ -66,13 +66,13 @@ REAL_TARGETS = {**{k: v for k, v in TARGETS_M1B.items() if k != "hpa90"},
 
 
 class DitheredHPA:
-    """HPA at u=0.70 whose replica delta is, with probability eps, replaced by a
+    """HPA at u=0.70 (or base_util) whose replica delta is, with probability eps, replaced by a
     uniform draw from {-1, 0, +1}. A draw that would leave the replica bounds becomes
     0, so probs() is the exact probability of each delta given the state."""
 
-    def __init__(self, eps: float, rng: np.random.Generator):
+    def __init__(self, eps: float, rng: np.random.Generator, base_util: float = BEHAVIOUR_UTIL):
         self.eps, self.rng = eps, rng
-        self.hpa = ClassicalController(vpa=False, target_util=BEHAVIOUR_UTIL)
+        self.hpa = ClassicalController(vpa=False, target_util=base_util)
 
     def reset(self) -> None:
         self.hpa.reset()

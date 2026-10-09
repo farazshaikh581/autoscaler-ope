@@ -283,9 +283,9 @@ def preflight_live():
     return state
 
 
-def make_policy(name, eps, seed):
+def make_policy(name, eps, seed, base_util=0.70):
     if name == "dithered":
-        return DitheredHPA(eps, np.random.default_rng(seed)), True
+        return DitheredHPA(eps, np.random.default_rng(seed), base_util), True
     return TARGETS[name](), False
 
 
@@ -294,6 +294,7 @@ def main():
     ap.add_argument("--live", action="store_true", help="act on the cluster (default: dry run)")
     ap.add_argument("--policy", default="dithered", help="'dithered' or a target name: " + ", ".join(TARGETS))
     ap.add_argument("--eps", type=float, default=0.0)
+    ap.add_argument("--behaviour-util", type=float, default=0.70, help="target utilisation of the dithered HPA")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--family", choices=("azure", "bitbrains"), required=True)
     ap.add_argument("--workload", required=True)
@@ -318,7 +319,7 @@ def main():
         cluster = LiveCluster(args.load_seconds)
     else:
         cluster = DryRunCluster(args.family, args.workload, args.start, args.steps, args.load_seconds, args.quiet)
-    policy, dithered = make_policy(args.policy, args.eps, args.seed)
+    policy, dithered = make_policy(args.policy, args.eps, args.seed, args.behaviour_util)
     policy.reset()
     tag = args.tag or f"{'live' if args.live else 'dry'}_{args.family}_{args.workload}_{args.start}_{args.policy}_eps{args.eps:g}_s{args.seed}"
     out_dir = os.path.join(HERE, "runs" if args.live else "dryruns")
