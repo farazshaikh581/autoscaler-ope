@@ -58,7 +58,7 @@ def evaluate(w, log_tags, with_baselines=True, v1=False):
         e = tw.estimate(f, rps, lf)
         (slo, shi), (clo, chi) = interval_v2(e)
         r = dict(window=w, target=name, truth_runs=len(tr["runs"]), truth_sla=tr["sla"], truth_cost=tr["cost"],
-                 twin_sla=e["sla"], twin_cost=e["cost"], far_share=e["far_share"],
+                 twin_sla=e["sla"], twin_cost=e["cost"], far_share=e["far_share"], knee_share=e["knee_share"],
                  in_pi=bool(slo <= tr["sla"] <= shi and clo <= tr["cost"] <= chi))
         r["twin_sla_err"], r["twin_cost_err"] = err(e["sla"], e["cost"], tr)
         if t1 is not None:
