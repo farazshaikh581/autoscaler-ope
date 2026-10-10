@@ -30,6 +30,9 @@ K = 10
 N_ROLLOUTS = 40
 RHO_SHIFT = 0.03
 FAR = 0.25                 # nearest donor further than this in the matching metric: outside the logs' support
+KNEE_WIDTH = 0.15          # K donors spread wider than this in the matching metric ...
+KNEE_MIX = (0.1, 0.9)      # ... and disagree on the SLA outcome: interpolating across a sparse knee
+FLAG_KNEE = 0.20           # knee_share above this: the estimate is flagged (M7)
 REPLICA_LO, REPLICA_HI = 1, 12
 
 
@@ -68,7 +71,7 @@ class Twin:
         for steps 1..T-1, the same alignment as realog.truth()."""
         pol = factory()
         pol.reset()
-        self._far = []
+        self._far, self._width, self._mix = [], [], []
         ready = req = prev_ready = start_replicas
         D_prev = demand(rps[0], ready, self.cpu_req, self.m_per_rps)
         sla, cost = [], []
@@ -79,6 +82,8 @@ class Twin:
             dist = np.abs(self.X - q).sum(1)
             idx = np.argpartition(dist, self.k)[:self.k]
             self._far.append(dist[idx].min() > FAR)
+            self._width.append(dist[idx].max())
+            self._mix.append(self.cols["sla_ok"][idx].mean())
             j = rng.choice(idx)
             rho = c["rho"][j]
             if self.rescale and D < self.linear_below and c["D"][j] < self.linear_below:
@@ -101,7 +106,7 @@ class Twin:
         """Point estimates, single-run prediction intervals (5-95%) and the
         sensitivity interval (union over rho shifts of -RHO_SHIFT, 0, +RHO_SHIFT)."""
         out = {}
-        far = []
+        far, knee = [], []
         for shift in (0.0, -RHO_SHIFT, RHO_SHIFT):
             rng = np.random.default_rng(seed)
             r = []
@@ -109,6 +114,8 @@ class Twin:
                 r.append([100 * x.mean() for x in self.rollout(factory, rps, load_frac, rng, shift)])
                 if shift == 0.0:
                     far.append(np.mean(self._far))
+                    mix = np.array(self._mix)
+                    knee.append(np.mean((mix > KNEE_MIX[0]) & (mix < KNEE_MIX[1]) & (np.array(self._width) > KNEE_WIDTH)))
             out[shift] = np.array(r)
         base = out[0.0]
         allr = np.vstack(list(out.values()))
@@ -117,7 +124,7 @@ class Twin:
                     cost_pi=tuple(np.percentile(base[:, 1] / 100, [5, 95])),
                     sla_si=tuple(np.percentile(allr[:, 0], [5, 95])),
                     cost_si=tuple(np.percentile(allr[:, 1] / 100, [5, 95])),
-                    far_share=float(np.mean(far)),
+                    far_share=float(np.mean(far)), knee_share=float(np.mean(knee)),
                     sla_shift=[out[s][:, 0].mean() for s in (-RHO_SHIFT, RHO_SHIFT)],
                     cost_shift=[out[s][:, 1].mean() / 100 for s in (-RHO_SHIFT, RHO_SHIFT)])
 
