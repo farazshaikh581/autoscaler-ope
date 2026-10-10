@@ -1,0 +1,3 @@
+step,pod,created_s,ready_s,readiness_delay_s
+66,web-service-787bccf486-mkvqq,987.8,996.8,9.0
+155,web-service-787bccf486-kx7d6,2323.8,2332.8,9.0
