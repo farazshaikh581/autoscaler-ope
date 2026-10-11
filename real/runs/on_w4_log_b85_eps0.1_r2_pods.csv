@@ -1,0 +1,12 @@
+step,pod,created_s,ready_s,readiness_delay_s
+3,web-service-787bccf486-sjm5g,43.6,52.6,9.0
+20,web-service-787bccf486-m6cn8,297.6,305.6,8.0
+29,web-service-787bccf486-wnrxp,433.6,441.6,8.0
+90,web-service-787bccf486-ps54m,1348.6,1357.6,9.0
+97,web-service-787bccf486-txxmc,1453.6,1461.6,8.0
+101,web-service-787bccf486-w88js,1512.6,1520.6,8.0
+129,web-service-787bccf486-5mlst,1933.6,1942.6,9.0
+133,web-service-787bccf486-zwp94,1992.6,2001.6,9.0
+144,web-service-787bccf486-zsn2h,2158.6,2166.6,8.0
+145,web-service-787bccf486-wq5xm,2172.6,2181.6,9.0
+172,web-service-787bccf486-rrxh9,2579.6,2587.6,8.0

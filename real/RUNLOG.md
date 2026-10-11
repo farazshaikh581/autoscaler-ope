@@ -98,3 +98,12 @@
 | 2026-10-10 12:34 | OPE harness on_w3_truth_slo_cost_r2: slo_cost eps=0, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-10 13:27 |
 | 2026-10-10 13:26 | OPE harness on_w3_truth_pred70_r2: pred70 eps=0, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-10 14:19 |
 | 2026-10-10 18:56 | M6 batch finished 14:17 UTC: 32/32 runs exit 0; report real/runs/m6_report.md. Cluster idle, web-service 2/2, CPU limit still 200m. | - |
+| 2026-10-10 21:49 | OPE harness on_w3_log_b85_eps0.1_r1: dithered eps=0.1, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-10 22:42 |
+| 2026-10-10 22:40 | OPE harness on_w3_log_b85_eps0.1_r2: dithered eps=0.1, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-10 23:33 |
+| 2026-10-10 23:31 | OPE harness on_w4_log_b85_eps0.1_r1: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 00:24 |
+| 2026-10-11 00:22 | OPE harness on_w4_log_b85_eps0.1_r2: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 01:15 |
+| 2026-10-11 01:13 | OPE harness on_w3_log_b50_eps0.1_r1: dithered eps=0.1, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-11 02:06 |
+| 2026-10-11 02:05 | OPE harness on_w3_log_b50_eps0.1_r2: dithered eps=0.1, bitbrains/cpu-bound start 950, 200 steps x 15s, CPU limit 200m | 2026-10-11 02:58 |
+| 2026-10-11 02:56 | OPE harness on_w4_log_b50_eps0.1_r1: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 03:49 |
+| 2026-10-11 03:48 | OPE harness on_w4_log_b50_eps0.1_r2: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 04:41 |
+| 2026-10-11 19:45 | M7 batch finished 04:39 UTC: 8/8 runs exit 0; report real/runs/m7_report.md (D1 FAIL, D2 PASS). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
