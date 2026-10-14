@@ -1,7 +1,7 @@
 """Behaviour and target policies, and shadow replay of a target along a log."""
 import numpy as np
 
-from .sim import D_REPS, ClassicalController, PredictiveController, SloCostAwareController, in_bounds
+from .controllers import D_REPS, ClassicalController, PredictiveController, SloCostAwareController, in_bounds
 
 HPA_TOLERANCE = 0.10   # same as eval_baselines
 

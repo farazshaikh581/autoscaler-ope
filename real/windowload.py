@@ -26,6 +26,30 @@ RPS_PER_PROC = 250
 WORKERS_PER_PROC = 128
 
 
+# percentile() and summarize() are copied from joint-hv-autoscaler phase0/load.py at
+# commit de86f80, so the harness runs without that repository.
+def percentile(sorted_vals: list[float], p: float) -> float:
+    if not sorted_vals:
+        return float("nan")
+    k = min(int(round((p / 100.0) * (len(sorted_vals) - 1))), len(sorted_vals) - 1)
+    return sorted_vals[k]
+
+
+def summarize(samples: list[tuple[float, bool]]) -> dict:
+    lats = sorted(l for l, ok in samples if ok)
+    n = len(samples)
+    ok_n = len(lats)
+    return {
+        "n": n,
+        "success": (ok_n / n) if n else float("nan"),
+        "mean_ms": (sum(lats) / ok_n) if ok_n else float("nan"),
+        "p50_ms": percentile(lats, 50),
+        "p90_ms": percentile(lats, 90),
+        "p95_ms": percentile(lats, 95),
+        "p99_ms": percentile(lats, 99),
+    }
+
+
 def _worker(url, rps, t_start, t_end, q):
     samples, lock = [], threading.Lock()
     sent = [0]

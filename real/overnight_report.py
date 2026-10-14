@@ -20,12 +20,10 @@ sys.path.insert(0, REPO)
 sys.path.insert(0, HERE)
 from ope.estimators import all_estimates, ratios  # noqa: E402
 from ope.logger import logged_prob  # noqa: E402
-from ope.mb import dr_mb_per_step, dr_per_step, mb_estimate, mb_logged, shadow_with_snapshots, window_q  # noqa: E402
+from ope.mb import bias_terms, dr_mb_per_step, dr_per_step, mb_estimate, mb_logged, shadow_with_snapshots, window_q  # noqa: E402
 from ope.model import TreeModel, training_data  # noqa: E402
 from ope.policies import REAL_TARGETS  # noqa: E402
-from ope.sim import make_env, outcome, step_action, use_family  # noqa: E402
 from realog import load_run, readiness_delay_steps, to_log, truth  # noqa: E402
-from run_m3 import bias_terms  # noqa: E402
 
 TARGETS = REAL_TARGETS
 WINDOWS = {"w1": ("bitbrains", "io-bound", 4725), "w2": ("azure", "cpu-bound", 1200)}
@@ -39,6 +37,7 @@ def blob(rev_path):
 
 
 def sim_value(window, name, steps=200):
+    from ope.sim import make_env, outcome, step_action, use_family
     fam, wl, start = WINDOWS[window]
     use_family(fam)
     env = make_env(wl, steps)

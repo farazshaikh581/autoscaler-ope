@@ -16,7 +16,9 @@ while E1's runner is alive or any HPA/VPA object exists in hv-phase0.
   3. Let the policy decide, seeing the same m / s fields as in the simulator.
   4. `kubectl scale` within 1-12 replicas if the decision changes the count.
 - max_rps 2050 = node0's 1200 x 205/120, so per-pod CPU matches node0 and the
-  simulator's calibration.
+  simulator's calibration. (Later note: the value stands on saul alone. The knee check
+  gives 1.727 mcores per request, so a 200m pod saturates near 116 rps and the windows
+  need 8-12 pods at peak; see the harness docstring.)
 - Policies:
   - `dithered`: the logging policy, HPA u = 0.7, stabilisation 3, eps dither;
     logs exact action probabilities.
@@ -103,5 +105,6 @@ Otherwise re-pick the window or the rps scale before spending 20+ h.
   the pilot looks good, the plan can trade length for count (e.g. 4 x 100-step
   runs).
 - **Topology:** Phase 0's 2-worker topology (k8s-worker3/4 cordoned) keeps
-  results comparable with node0. With 6 vCPU on k8s-worker1/2, 12 replicas x
+  results comparable with node0. (Later note: every OPE live run used all four workers
+  schedulable, as each run's metadata records.) With 6 vCPU on k8s-worker1/2, 12 replicas x
   500m fit.

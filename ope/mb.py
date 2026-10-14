@@ -13,7 +13,7 @@ import numpy as np
 
 from .estimators import ratios
 from .model import features
-from .sim import SLA_MEAN_LATENCY_MS
+from .controllers import SLA_MEAN_LATENCY_MS
 
 REPLICA_LO, REPLICA_HI, SCALE_DELAY = 1, 12, 2
 
@@ -187,3 +187,13 @@ def dr_mb_per_step(dr, v, k, mb_full):
     prediction of the same step from the episode start under the target. Equals
     mb_full + (dr - anchor); at full horizon (j = 0) it is ordinary DR."""
     return mb_full + (dr - window_anchor(v, k))
+
+
+def bias_terms(pred, obs, load):
+    """Mean model bias on the behaviour trajectory: overall, and per quartile of
+    the logged load. Returns (overall, per-step bias by the step's quartile)."""
+    diff = pred - obs
+    edges = np.quantile(load, [0.25, 0.5, 0.75])
+    qi = np.searchsorted(edges, load, side="right")
+    per_q = np.array([diff[qi == b].mean() if (qi == b).any() else diff.mean() for b in range(4)])
+    return float(diff.mean()), per_q[qi]

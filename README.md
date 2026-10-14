@@ -3,9 +3,34 @@
 Question: can an operator estimate a new autoscaler's SLA and cost from the logs of
 the current one, before deploying it?
 
-Simulation only. The environment and controllers are the calibrated Phase 1
-simulator from `joint_hv_autoscaler/phase1`, imported read-only
-(`ope/sim.py`); every results file records that repository's commit.
+## The live study on saul (the paper)
+
+Everything the paper reports comes from live runs on the saul k3s cluster
+(`real/`: harness, batches M4-M8, reports and per-cell tables in `real/runs/`). This
+part needs only this repository, Python 3.10 with `requirements.txt`, and the cluster:
+
+| Piece | Module |
+|---|---|
+| Live harness (15 s control loop, hard 12 s load windows) | `real/harness.py`, `real/windowload.py`, `real/kube.py` |
+| Workload traces (four files, checksums in `traces/SHA256SUMS`) | `traces/`, `ope/traces.py` |
+| Target controllers (HPA, SLO-cost, predictive) and constants | `ope/controllers.py` |
+| Demand-space twin, queueing baseline, off-policy baselines | `ope/twin.py`, `ope/queue_baseline.py`, `real/overnight_report.py` |
+| Pre-registered plans and their reports | `real/PLAN_M*.md`, `real/m*_report.py` |
+
+`python real/check_saul_native.py` checks this:
+- with the joint_hv_autoscaler modules blocked, the live pipeline and the analysis
+  import;
+- they reproduce the committed results;
+- the copied controllers decide exactly as the originals on every logged step.
+
+The simulator is not used by any live result. W1 and W2 were picked with it (M4); W3-W5
+by a trace-statistics rule (`real/pick_w5.py`).
+
+## Simulation studies (M1-M3)
+
+The environment and controllers are the calibrated Phase 1 simulator from
+`joint_hv_autoscaler/phase1`, imported read-only (`ope/sim.py`); every results file
+records that repository's commit. The harness's dry-run mode uses it too.
 
 ## M1: feasibility in simulation
 
