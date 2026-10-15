@@ -1,0 +1,64 @@
+[2026-10-14T12:34:36Z] M8 runner start (pid 992987), 20 runs
+[2026-10-14T12:34:36Z] [1/20] on_w5_log_eps0.1_r1 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_log_eps0.1_r1: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_log_eps0.1_r1.csv
+[2026-10-14T13:25:41Z] [1/20] on_w5_log_eps0.1_r1 done
+[2026-10-14T13:25:41Z] [2/20] on_w5_log_eps0_r1 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_log_eps0_r1: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_log_eps0_r1.csv
+[2026-10-14T14:17:19Z] [2/20] on_w5_log_eps0_r1 done
+[2026-10-14T14:17:19Z] [3/20] on_w5_log_eps0.1_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_log_eps0.1_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_log_eps0.1_r2.csv
+[2026-10-14T15:08:56Z] [3/20] on_w5_log_eps0.1_r2 done
+[2026-10-14T15:08:56Z] [4/20] on_w5_log_eps0_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_log_eps0_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_log_eps0_r2.csv
+[2026-10-14T16:00:34Z] [4/20] on_w5_log_eps0_r2 done
+[2026-10-14T16:00:34Z] [5/20] on_w5_truth_hpa30 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa30: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa30.csv
+[2026-10-14T16:52:12Z] [5/20] on_w5_truth_hpa30 done
+[2026-10-14T16:52:12Z] [6/20] on_w5_truth_hpa50 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa50: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa50.csv
+[2026-10-14T17:43:51Z] [6/20] on_w5_truth_hpa50 done
+[2026-10-14T17:43:51Z] [7/20] on_w5_truth_hpa85 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa85: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa85.csv
+[2026-10-14T18:35:28Z] [7/20] on_w5_truth_hpa85 done
+[2026-10-14T18:35:28Z] [8/20] on_w5_truth_hpa95 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa95: 200 steps in 3001s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa95.csv
+[2026-10-14T19:27:01Z] [8/20] on_w5_truth_hpa95 done
+[2026-10-14T19:27:01Z] [9/20] on_w5_truth_hpa70_stab0 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa70_stab0: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa70_stab0.csv
+[2026-10-14T20:18:11Z] [9/20] on_w5_truth_hpa70_stab0 done
+[2026-10-14T20:18:11Z] [10/20] on_w5_truth_hpa70_stab10 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_hpa70_stab10: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_hpa70_stab10.csv
+[2026-10-14T21:09:49Z] [10/20] on_w5_truth_hpa70_stab10 done
+[2026-10-14T21:09:49Z] [11/20] on_w5_truth_slo_cost start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_slo_cost: 200 steps in 3001s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_slo_cost.csv
+[2026-10-14T22:01:22Z] [11/20] on_w5_truth_slo_cost done
+[2026-10-14T22:01:22Z] [12/20] on_w5_truth_pred70 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w5_truth_pred70: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w5_truth_pred70.csv
+[2026-10-14T22:52:28Z] [12/20] on_w5_truth_pred70 done
+[2026-10-14T22:52:28Z] [13/20] on_w4_truth_hpa30_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa30_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa30_r2.csv
+[2026-10-14T23:44:01Z] [13/20] on_w4_truth_hpa30_r2 done
+[2026-10-14T23:44:01Z] [14/20] on_w4_truth_hpa50_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa50_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa50_r2.csv
+[2026-10-15T00:35:39Z] [14/20] on_w4_truth_hpa50_r2 done
+[2026-10-15T00:35:39Z] [15/20] on_w4_truth_hpa85_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa85_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa85_r2.csv
+[2026-10-15T01:26:51Z] [15/20] on_w4_truth_hpa85_r2 done
+[2026-10-15T01:26:51Z] [16/20] on_w4_truth_hpa95_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa95_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa95_r2.csv
+[2026-10-15T02:18:07Z] [16/20] on_w4_truth_hpa95_r2 done
+[2026-10-15T02:18:07Z] [17/20] on_w4_truth_hpa70_stab0_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa70_stab0_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa70_stab0_r2.csv
+[2026-10-15T03:09:19Z] [17/20] on_w4_truth_hpa70_stab0_r2 done
+[2026-10-15T03:09:19Z] [18/20] on_w4_truth_hpa70_stab10_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_hpa70_stab10_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_hpa70_stab10_r2.csv
+[2026-10-15T04:00:30Z] [18/20] on_w4_truth_hpa70_stab10_r2 done
+[2026-10-15T04:00:30Z] [19/20] on_w4_truth_slo_cost_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_slo_cost_r2: 200 steps in 3001s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_slo_cost_r2.csv
+[2026-10-15T04:52:09Z] [19/20] on_w4_truth_slo_cost_r2 done
+[2026-10-15T04:52:09Z] [20/20] on_w4_truth_pred70_r2 start (commit d6cccad, harness f10aeec747a827e74bf5a1b9e258139f483480cc)
+on_w4_truth_pred70_r2: 200 steps in 3000s -> /home/labtlc/autoscaler-ope/real/runs/on_w4_truth_pred70_r2.csv
+[2026-10-15T05:43:14Z] [20/20] on_w4_truth_pred70_r2 done
+[2026-10-15T05:43:14Z] batch finished; analysis on CPUs 16,18,20,22,24,26,28,30,32,34,36,38 at nice 19
+[2026-10-15T05:44:34Z] report exit 0: real/runs/m8_report.md
+[2026-10-15T05:44:34Z] M8 DONE

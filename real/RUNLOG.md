@@ -107,3 +107,24 @@
 | 2026-10-11 02:56 | OPE harness on_w4_log_b50_eps0.1_r1: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 03:49 |
 | 2026-10-11 03:48 | OPE harness on_w4_log_b50_eps0.1_r2: dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-11 04:41 |
 | 2026-10-11 19:45 | M7 batch finished 04:39 UTC: 8/8 runs exit 0; report real/runs/m7_report.md (D1 FAIL, D2 PASS). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
+| 2026-10-14 12:34 | OPE harness on_w5_log_eps0.1_r1: dithered eps=0.1, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 13:27 |
+| 2026-10-14 13:25 | OPE harness on_w5_log_eps0_r1: dithered eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 14:18 |
+| 2026-10-14 14:17 | OPE harness on_w5_log_eps0.1_r2: dithered eps=0.1, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 15:10 |
+| 2026-10-14 15:08 | OPE harness on_w5_log_eps0_r2: dithered eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 16:01 |
+| 2026-10-14 16:00 | OPE harness on_w5_truth_hpa30: hpa30 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 16:53 |
+| 2026-10-14 16:52 | OPE harness on_w5_truth_hpa50: hpa50 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 17:45 |
+| 2026-10-14 17:43 | OPE harness on_w5_truth_hpa85: hpa85 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 18:36 |
+| 2026-10-14 18:35 | OPE harness on_w5_truth_hpa95: hpa95 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 19:28 |
+| 2026-10-14 19:27 | OPE harness on_w5_truth_hpa70_stab0: hpa70_stab0 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 20:20 |
+| 2026-10-14 20:18 | OPE harness on_w5_truth_hpa70_stab10: hpa70_stab10 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 21:11 |
+| 2026-10-14 21:09 | OPE harness on_w5_truth_slo_cost: slo_cost eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 22:02 |
+| 2026-10-14 22:01 | OPE harness on_w5_truth_pred70: pred70 eps=0, bitbrains/io-bound start 6150, 200 steps x 15s, CPU limit 200m | 2026-10-14 22:54 |
+| 2026-10-14 22:52 | OPE harness on_w4_truth_hpa30_r2: hpa30 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-14 23:45 |
+| 2026-10-14 23:44 | OPE harness on_w4_truth_hpa50_r2: hpa50 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 00:37 |
+| 2026-10-15 00:35 | OPE harness on_w4_truth_hpa85_r2: hpa85 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 01:28 |
+| 2026-10-15 01:26 | OPE harness on_w4_truth_hpa95_r2: hpa95 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 02:19 |
+| 2026-10-15 02:18 | OPE harness on_w4_truth_hpa70_stab0_r2: hpa70_stab0 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 03:11 |
+| 2026-10-15 03:09 | OPE harness on_w4_truth_hpa70_stab10_r2: hpa70_stab10 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 04:02 |
+| 2026-10-15 04:00 | OPE harness on_w4_truth_slo_cost_r2: slo_cost eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 04:53 |
+| 2026-10-15 04:52 | OPE harness on_w4_truth_pred70_r2: pred70 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 05:45 |
+| 2026-10-15 08:36 | M8 batch finished 05:43 UTC: 20/20 runs exit 0; report real/runs/m8_report.md (Q1 PASS, Q2 PASS, Q3 PASS 88%, Q4 PASS). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
