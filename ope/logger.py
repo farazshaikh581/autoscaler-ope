@@ -2,7 +2,7 @@
 import numpy as np
 
 from .policies import DitheredHPA
-from .sim import D_REPS, EPISODE_LEN, M_KEYS, make_env, outcome, snapshot, step_action
+from .controllers import D_REPS, EPISODE_LEN, M_KEYS, outcome, snapshot
 
 
 # Observed after each step: serving replicas, requested replicas, CPU request,
@@ -16,7 +16,8 @@ def collect(workload: str, eps: float, episode_seeds: list[int], dither_seed,
             episode_len: int = EPISODE_LEN) -> dict:
     """Run the behaviour for one episode per seed. Step t holds the context the
     controller saw (m, s), the logged delta, the behaviour probability of all three
-    deltas, and the outcome observed after acting."""
+    deltas, and the outcome observed after acting. Simulation only."""
+    from .sim import make_env, step_action
     env = make_env(workload, episode_len)
     pol = DitheredHPA(eps, np.random.default_rng(dither_seed))
     n, T = len(episode_seeds), episode_len

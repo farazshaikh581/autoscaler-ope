@@ -26,7 +26,7 @@ import pandas as pd
 
 from ope.estimators import all_estimates, ratios, step_weights
 from ope.logger import collect, high_load_mask, logged_prob
-from ope.mb import dr_mb_per_step, dr_per_step, mb_logged, shadow_with_snapshots, window_q
+from ope.mb import bias_terms, dr_mb_per_step, dr_per_step, mb_logged, shadow_with_snapshots, window_q
 from ope.model import MODELS, training_data
 from ope.sim import sim_commit, use_family
 from run_m1b import CELLS, EPS as M1B_EPS, REPS, TARGETS, cell_key, log_seeds, paired_truth_job
@@ -37,16 +37,6 @@ DR_K = (2, 4, 8)
 SCOPES = ("all", "high_load")
 METRICS = ("sla", "cost")
 HERE = os.path.dirname(os.path.abspath(__file__))
-
-
-def bias_terms(pred, obs, load):
-    """Mean model bias on the behaviour trajectory: overall, and per quartile of
-    the logged load. Returns (overall, per-step bias by the step's quartile)."""
-    diff = pred - obs
-    edges = np.quantile(load, [0.25, 0.5, 0.75])
-    qi = np.searchsorted(edges, load, side="right")
-    per_q = np.array([diff[qi == b].mean() if (qi == b).any() else diff.mean() for b in range(4)])
-    return float(diff.mean()), per_q[qi]
 
 
 def job(args):

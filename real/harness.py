@@ -18,9 +18,15 @@ Each step (period P = 15 s):
 The window measured at step t+1 is the outcome of the action at step t; rows keep
 the raw per-step record and real/align.py (to be written with the M4 analysis) pairs them.
 
-Load is windowed (as in RealClusterBackend): the driver idles for P - L seconds
-while kubectl runs. max_rps defaults to 2050 = node0's 1200 x 205/120 (saul's
-calibration: 205 rps here gives the per-pod CPU node0 sees at 120 rps).
+Load is windowed: the driver idles for P - L seconds while kubectl runs. max_rps
+defaults to 2050 rps, a load scale for saul: its knee check (real/kneecheck.py) gives
+1.727 mcores per request, so one 200m pod saturates near 116 rps, and the trace windows
+then peak at 960-1420 rps, needing 8-12 pods. The 1-12 replica range therefore spans
+under- and over-provisioning on saul's four workers.
+
+The live mode needs only this repository and the cluster: traces from traces/
+(ope.traces), controllers from ope.controllers, kubectl helpers from real/kube.py. The
+dry run uses the joint_hv_autoscaler simulator (ope.sim), imported only in that mode.
 """
 import argparse
 import csv
@@ -38,14 +44,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, REPO)
 from ope.policies import REAL_TARGETS, DitheredHPA  # noqa: E402
-from ope.sim import D_REPS, PHASE1, SLA_MEAN_LATENCY_MS, sim_commit, use_family  # noqa: E402
-
-PHASE0 = os.path.join(os.path.dirname(PHASE1), "phase0")
-for p in (PHASE0, PHASE1):
-    if p not in sys.path:
-        sys.path.insert(0, p)
-from common import guard_namespace, kubectl, kubectl_json, parse_cpu_millicores  # noqa: E402
-from envs.joint_hv_env import INTENSITY, JointHVEnv, trace_dir  # noqa: E402
+from ope import traces  # noqa: E402
+from ope.controllers import D_REPS, SLA_MEAN_LATENCY_MS  # noqa: E402
+from kube import guard_namespace, kubectl, kubectl_json, parse_cpu_millicores  # noqa: E402
 
 NS, DEPLOY, SELECTOR = "hv-phase0", "web-service", "app=web-service"
 REPLICA_LO, REPLICA_HI = 1, 12
@@ -64,8 +65,7 @@ class LiveCluster:
         svc = kubectl_json(["get", "svc", DEPLOY, "-n", NS])
         self.url = f"http://{svc['spec']['clusterIP']}:{svc['spec']['ports'][0]['port']}/"
         self.load_seconds = load_seconds
-        from load import summarize
-        from windowload import run_load       # hard 12 s window: a saturated step stays inside 15 s
+        from windowload import run_load, summarize   # hard 12 s window: a saturated step stays inside 15 s
         self._run_load, self._summarize = run_load, summarize
         self.cpu_req = self._cpu_req()
         self._seen = set()
@@ -155,6 +155,7 @@ class DryRunCluster:
     policy wiring end to end before any cluster time is spent."""
 
     def __init__(self, family, workload, start, episode_len, load_seconds, quiet):
+        from ope.sim import JointHVEnv, use_family
         use_family(family)
         self.env = JointHVEnv(workload=workload, episode_len=episode_len)
         self.env.reset(seed=0, options={"start": start})
@@ -306,11 +307,8 @@ def main():
     ap.add_argument("--tag", default=None)
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
-    use_family(args.family)
-    tr = np.load(os.path.join(trace_dir("traces"), f"{args.workload}.npz"))
-    cpu = np.nan_to_num(tr["cpu_norm"]).astype(np.float32)
-    load = np.clip(cpu / (np.percentile(cpu, 99) or 1.0), 0, 1.5)   # same normalisation as the sim
-    cpu_int = INTENSITY[args.workload]["cpu"]
+    load = traces.load_frac(args.family, args.workload)   # same normalisation as the sim
+    cpu_int = traces.INTENSITY[args.workload]
 
     state = None
     if args.live:
@@ -324,7 +322,7 @@ def main():
     tag = args.tag or f"{'live' if args.live else 'dry'}_{args.family}_{args.workload}_{args.start}_{args.policy}_eps{args.eps:g}_s{args.seed}"
     out_dir = os.path.join(HERE, "runs" if args.live else "dryruns")
     os.makedirs(out_dir, exist_ok=True)
-    meta = dict(vars(args), tag=tag, cpu_int=cpu_int, sim_commit=sim_commit(), cluster=state,
+    meta = dict(vars(args), tag=tag, cpu_int=cpu_int, trace_sha256=traces.sha256(args.family, args.workload), cluster=state,
                 topology="all 4 workers schedulable" if args.live else "dry-run (simulator)",
                 ope_commit=subprocess.run(["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True,
                                           text=True).stdout.strip(), started=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
