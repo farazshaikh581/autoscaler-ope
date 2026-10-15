@@ -1,4 +1,5 @@
-"""M4 real-cluster harness: one 15 s control loop on saul's hv-phase0/web-service.
+"""M4 real-cluster harness: one 15 s control loop on saul's hv-phase0/web-service
+(or, with --app api-service, the second application; both in deploy/).
 
   # dry run (default): the simulator stands in for the cluster, kubectl commands are printed
   python real/harness.py --policy dithered --eps 0.1 --family bitbrains --workload io-bound --start 1234
@@ -48,9 +49,16 @@ from ope import traces  # noqa: E402
 from ope.controllers import D_REPS, SLA_MEAN_LATENCY_MS  # noqa: E402
 from kube import guard_namespace, kubectl, kubectl_json, parse_cpu_millicores  # noqa: E402
 
-NS, DEPLOY, SELECTOR = "hv-phase0", "web-service", "app=web-service"
+NS = "hv-phase0"
+# The applications under test, deployed from deploy/<app>/ (deploy/apply.sh). max_rps is
+# each app's load scale: the same trace step asks for the same number of 200m pods.
+APPS = {
+    "web-service": dict(configmap="web-app-code", max_rps=2050.0),
+    "api-service": dict(configmap="api-app-code", max_rps=1508.0),   # 2050 * 1.727 / 2.348 (kneecheck_api-service.json)
+}
+DEPLOY, SELECTOR = "web-service", "app=web-service"     # set by use_app()
 REPLICA_LO, REPLICA_HI = 1, 12
-CPU_REQ_M = 200                      # web-service.yaml request; read live in --live mode
+CPU_REQ_M = 200                      # deploy/<app>/manifest.yaml request; read live in --live mode
 CPU_LIMIT = "200m"                   # OPE runs: limit = request, as in the sim's knee calibration (set by hand)
 TARGETS = REAL_TARGETS
 FIELDS = ["step", "wall_s", "load_frac", "rps_target", "rps_achieved", "n_requests",
@@ -272,8 +280,12 @@ def preflight_live():
     state = cluster_state()
     state["vpa_args"] = args
     state["cpu_limit"] = live_cpu_limit()
+    state["app"] = DEPLOY
+    state["app_code_sha256"], same = app_code_sha256(DEPLOY)
+    if not same:
+        problems.append(f"the {DEPLOY} code in the cluster differs from deploy/{DEPLOY}/app.py; run deploy/apply.sh")
     if state["cpu_limit"] != CPU_LIMIT:
-        problems.append(f"web-service CPU limit is {state['cpu_limit']}, OPE runs need {CPU_LIMIT} (= request)")
+        problems.append(f"{DEPLOY} CPU limit is {state['cpu_limit']}, OPE runs need {CPU_LIMIT} (= request)")
     cordoned = [n for n, v in state["nodes"].items() if n.startswith("k8s-worker") and v != "schedulable"]
     if cordoned:
         problems.append(f"workers cordoned: {cordoned} (M4 uses all 4 workers schedulable)")
@@ -282,6 +294,22 @@ def preflight_live():
     if problems:
         sys.exit("refusing to start live run: " + "; ".join(problems))
     return state
+
+
+def use_app(app):
+    global DEPLOY, SELECTOR
+    if app not in APPS:
+        sys.exit(f"unknown app {app!r}: {', '.join(APPS)}")
+    DEPLOY, SELECTOR = app, f"app={app}"
+
+
+def app_code_sha256(app):
+    """sha256 of deploy/<app>/app.py, and whether the cluster's ConfigMap holds that code."""
+    import hashlib
+    with open(os.path.join(REPO, "deploy", app, "app.py"), "rb") as f:
+        code = f.read()
+    live = kubectl_json(["get", "configmap", APPS[app]["configmap"], "-n", NS])["data"]["app.py"].encode()
+    return hashlib.sha256(code).hexdigest(), live == code
 
 
 def make_policy(name, eps, seed, base_util=0.70):
@@ -303,10 +331,16 @@ def main():
     ap.add_argument("--steps", type=int, default=200)
     ap.add_argument("--period", type=float, default=15.0)
     ap.add_argument("--load-seconds", type=int, default=12)
-    ap.add_argument("--max-rps", type=float, default=2050.0)
+    ap.add_argument("--app", default="web-service", help="application under test: " + ", ".join(APPS))
+    ap.add_argument("--max-rps", type=float, default=None, help="load scale (default: the app's, see APPS)")
     ap.add_argument("--tag", default=None)
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args()
+    use_app(args.app)
+    if args.max_rps is None:
+        args.max_rps = APPS[args.app]["max_rps"]
+        if args.max_rps is None:
+            sys.exit(f"{args.app} has no load scale yet: run real/kneecheck.py --app {args.app}, then set APPS")
     load = traces.load_frac(args.family, args.workload)   # same normalisation as the sim
     cpu_int = traces.INTENSITY[args.workload]
 
@@ -330,7 +364,7 @@ def main():
         json.dump(meta, f, indent=1)
 
     if args.live:
-        runlog(f"OPE harness {tag}: {args.policy} eps={args.eps:g}, {args.family}/{args.workload} start "
+        runlog(f"OPE harness {tag}: {'' if args.app == 'web-service' else args.app + ', '}{args.policy} eps={args.eps:g}, {args.family}/{args.workload} start "
                f"{args.start}, {args.steps} steps x {args.period:g}s, CPU limit {state['cpu_limit']}", args.steps * args.period + 180)
     cluster.reset()
     t0 = time.time()

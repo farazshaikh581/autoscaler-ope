@@ -1,5 +1,5 @@
-"""Knee check: where does web-service's latency knee sit on saul with CPU
-limit = request = 200m, in the simulator's units (demand rho)?
+"""Knee check: where does an app's latency knee sit on saul with CPU limit = request =
+200m, in demand units (rho)? web-service by default; --app api-service for the second app.
 
 2 replicas, offered rps stepped through demand rho ~0.6 and 0.80-1.05. Each level:
 20 s warm-up, 50 s measured (latency from the load driver, CPU from the metrics
@@ -7,8 +7,11 @@ API polled during the measured part). Demand rho = rps * m_per_rps / (2 * 200m),
 with m_per_rps fitted on the unsaturated levels, as in the joint repo's
 phase1/calibration (sim knee: RHO_KNEE = 0.91, the sigmoid midpoint).
 
-  taskset -c 0,2,4,6,8,10,12,14 python real/kneecheck.py
+  taskset -c 0,2,4,6,8,10,12,14 python real/kneecheck.py [--app api-service --m-guess 2.7]
+
+Writes real/runs/kneecheck.json (web-service) or real/runs/kneecheck_<app>.json.
 """
+import argparse
 import json
 import os
 import sys
@@ -19,6 +22,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+import harness  # noqa: E402
 from harness import RUNLOG, LiveCluster, preflight_live, runlog  # noqa: E402,F401
 
 RHO_LEVELS = [0.60, 0.80, 0.85, 0.88, 0.91, 0.94, 0.97, 1.00, 1.05]
@@ -49,15 +53,20 @@ def measure(cluster, rps):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--app", default="web-service")
+    ap.add_argument("--m-guess", type=float, default=M_PER_RPS_GUESS, help="mcores per rps, to place the levels")
+    args = ap.parse_args()
+    harness.use_app(args.app)
     state = preflight_live()
     cluster = LiveCluster(load_seconds=MEASURE_S)
-    runlog(f"OPE knee check: 2 replicas, CPU limit {state['cpu_limit']}, {len(RHO_LEVELS)} rps levels",
+    runlog(f"OPE knee check {args.app}: 2 replicas, CPU limit {state['cpu_limit']}, {len(RHO_LEVELS)} rps levels",
            len(RHO_LEVELS) * (WARM_S + MEASURE_S + 10) + 120)
     cluster.reset(replicas=REPLICAS, settle_s=30)
     rows = []
     try:
         for r in RHO_LEVELS:
-            rps = int(round(r * REPLICAS * cluster.cpu_req / M_PER_RPS_GUESS))
+            rps = int(round(r * REPLICAS * cluster.cpu_req / args.m_guess))
             row = measure(cluster, rps)
             row["rho_meas"] = row["cpu_m"] / (REPLICAS * cluster.cpu_req)
             rows.append(row)
@@ -78,11 +87,12 @@ def main():
             return float("nan")
         return float(rho[i - 1] + (level - lat[i - 1]) * (rho[i] - rho[i - 1]) / (lat[i] - lat[i - 1]))
     mid = (l0 + lat.max()) / 2
-    out = dict(m_per_rps=m_per_rps, l0_ms=l0, plateau_ms=float(lat.max()), knee_mid_rho=crossing(mid),
+    out = dict(app=args.app, app_code_sha256=state["app_code_sha256"], m_per_rps=m_per_rps, l0_ms=l0, plateau_ms=float(lat.max()), knee_mid_rho=crossing(mid),
                sla20_rho=crossing(20.0), sim_knee=SIM_KNEE, cpu_limit=state["cpu_limit"], levels=rows,
                started=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
     os.makedirs(os.path.join(HERE, "runs"), exist_ok=True)
-    with open(os.path.join(HERE, "runs", "kneecheck.json"), "w") as f:
+    name = "kneecheck.json" if args.app == "web-service" else f"kneecheck_{args.app}.json"
+    with open(os.path.join(HERE, "runs", name), "w") as f:
         json.dump(out, f, indent=1)
     print(f"m_per_rps {m_per_rps:.3f}, L0 {l0:.1f} ms, top level {lat.max():.0f} ms; knee (latency midpoint) at "
           f"demand rho {out['knee_mid_rho']:.3f}, 20 ms SLA crossed at {out['sla20_rho']:.3f}; sim {SIM_KNEE}")

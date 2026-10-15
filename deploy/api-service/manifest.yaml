@@ -1,0 +1,72 @@
+# api-service: the second application of the OPE study (JSON API with a downstream call).
+# The code is deploy/api-service/app.py, mounted from the ConfigMap api-app-code that
+# deploy/apply.sh creates. CPU limit = request = 200m, the configuration of every OPE
+# live run (real/harness.py refuses another limit).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-service
+  namespace: hv-phase0
+  labels:
+    app: api-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-service
+  template:
+    metadata:
+      labels:
+        app: api-service
+    spec:
+      containers:
+      - name: web
+        image: python:3.10-slim
+        command: ["python", "/app/app.py"]
+        ports:
+        - containerPort: 8080
+        resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+        - resourceName: memory
+          restartPolicy: NotRequired
+        resources:
+          requests:
+            cpu: 200m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        env:
+        - name: API_RECORDS
+          value: "40"
+        - name: API_SIGMA
+          value: "0.9"
+        - name: API_WAIT_MS
+          value: "3"
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+      volumes:
+      - name: app-code
+        configMap:
+          name: api-app-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: hv-phase0
+spec:
+  selector:
+    app: api-service
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

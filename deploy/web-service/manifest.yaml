@@ -1,0 +1,68 @@
+# web-service: the first application of the OPE study (a fixed CPU-bound hash loop).
+# The code is deploy/web-service/app.py, mounted from the ConfigMap web-app-code that
+# deploy/apply.sh creates. CPU limit = request = 200m, the configuration of every OPE
+# live run (real/harness.py refuses another limit).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-service
+  namespace: hv-phase0
+  labels:
+    app: web-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-service
+  template:
+    metadata:
+      labels:
+        app: web-service
+    spec:
+      containers:
+      - name: web
+        image: python:3.10-slim
+        command: ["python", "/app/app.py"]
+        ports:
+        - containerPort: 8080
+        resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+        - resourceName: memory
+          restartPolicy: NotRequired
+        resources:
+          requests:
+            cpu: 200m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        env:
+        - name: WORK_ITERATIONS
+          value: "250"
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
+      volumes:
+      - name: app-code
+        configMap:
+          name: web-app-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: hv-phase0
+spec:
+  selector:
+    app: web-service
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

@@ -130,3 +130,5 @@
 | 2026-10-15 08:36 | M8 batch finished 05:43 UTC: 20/20 runs exit 0; report real/runs/m8_report.md (Q1 PASS, Q2 PASS, Q3 PASS 88%, Q4 PASS). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
 | 2026-10-15 08:45 | OPE harness smoke_saul_native: dithered eps=0, bitbrains/io-bound start 6150, 8 steps x 15s, CPU limit 200m | 2026-10-15 08:50 |
 | 2026-10-15 08:48 | saul-native merged into main; smoke run (harness 2870ed6, joint_hv_autoscaler imports blocked) OK (same load and scaling as on_w5_log_eps0_r1 steps 0-7). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
+| 2026-10-15 11:29 | Deploy api-service (second app, deploy/api-service, code sha256 cddfe92e32f2) into hv-phase0 via deploy/apply.sh api-service: 2 pods, CPU 200m/200m. web-service untouched. | - |
+| 2026-10-15 11:30 | OPE knee check api-service: 2 replicas, CPU limit 200m, 9 rps levels | 2026-10-15 11:44 |

@@ -7,10 +7,12 @@ the current one, before deploying it?
 
 Everything the paper reports comes from live runs on the saul k3s cluster
 (`real/`: harness, batches M4-M8, reports and per-cell tables in `real/runs/`). This
-part needs only this repository, Python 3.10 with `requirements.txt`, and the cluster:
+part needs only this repository, Python 3.10 with `requirements.txt`, and a k3s cluster
+that can pull `python:3.10-slim`:
 
 | Piece | Module |
 |---|---|
+| Applications under test (`web-service`, `api-service`) and `deploy/apply.sh` | `deploy/` |
 | Live harness (15 s control loop, hard 12 s load windows) | `real/harness.py`, `real/windowload.py`, `real/kube.py` |
 | Workload traces (four files, checksums in `traces/SHA256SUMS`) | `traces/`, `ope/traces.py` |
 | Target controllers (HPA, SLO-cost, predictive) and constants | `ope/controllers.py` |
