@@ -128,3 +128,6 @@
 | 2026-10-15 04:00 | OPE harness on_w4_truth_slo_cost_r2: slo_cost eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 04:53 |
 | 2026-10-15 04:52 | OPE harness on_w4_truth_pred70_r2: pred70 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 05:45 |
 | 2026-10-15 08:36 | M8 batch finished 05:43 UTC: 20/20 runs exit 0; report real/runs/m8_report.md (Q1 PASS, Q2 PASS, Q3 PASS 88%, Q4 PASS). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
+| 2026-10-15 08:45 | OPE harness smoke_saul_native: merged saul-native harness (2870ed6), joint_hv_autoscaler imports blocked, dithered eps=0, bitbrains/io-bound start 6150, 8 steps x 15s, CPU limit 200m | 2026-10-15 08:48 |
+| 2026-10-15 08:45 | OPE harness smoke_saul_native: dithered eps=0, bitbrains/io-bound start 6150, 8 steps x 15s, CPU limit 200m | 2026-10-15 08:50 |
+| 2026-10-15 08:48 | saul-native merged into main; smoke run OK (same load and scaling as on_w5_log_eps0_r1 steps 0-7). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
