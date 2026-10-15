@@ -10,8 +10,9 @@
    step of every live run (each target fed the run's own (m, s) sequence), and on 200,000
    random states.
 4. Analysis, with the joint repository blocked: twin v2 and the four off-policy baselines
-   reproduce the committed W4 cells of real/runs/m6_cells.csv, and real/m8_dev.py
-   reproduces real/runs/m8_dev.md exactly.
+   reproduce the committed W4 cells of real/runs/m6_cells.csv, the M8 report reproduces
+   all 16 cells of real/runs/m8_cells.csv, and real/m8_dev.py reproduces the queueing
+   fits of real/runs/m8_dev.md.
 Checks 2 and 3 import the originals for comparison; checks 1 and 4 run in a subprocess
 that cannot.
 """
@@ -53,13 +54,23 @@ def blocked_child():
         runpy.run_path(os.path.join(HERE, "m8_dev.py"), run_name="__main__")
     import pandas as pd
     import m8_report
-    w4 = m8_report.evaluate("w4")
+    # Since M8 the W4 truth is the mean of two runs, so compare the estimates, scored
+    # against M6's one-run truth, not the error columns.
+    w4 = m8_report.evaluate("w4").set_index("target")
     ref = pd.read_csv(os.path.join(HERE, "runs", "m6_cells.csv"))
     ref = ref[ref.test == "W4"].set_index("target")
-    cols = ["twin_sla_err", "twin_cost_err", "replay_sla_err", "sntpdis_k4_sla_err", "mbcalq_trees_sla_err", "drmb_k4_sla_err"]
-    worst = max(abs(w4.set_index("target").loc[ref.index, c] - ref[c]).max() for c in cols)
+    w4 = w4.loc[ref.index]
+    worst = max(abs(w4.twin_sla - ref.twin_sla).max(), abs(w4.twin_cost - ref.twin_cost).max())
+    for b in ("replay", "sntpdis_k4", "mbcalq_trees", "drmb_k4"):
+        worst = max(worst, abs(abs(w4[f"{b}_sla"] - ref.truth_sla) - ref[f"{b}_sla_err"]).max())
     assert worst < 1e-9, f"W4 estimates differ from real/runs/m6_cells.csv by {worst}"
     print("estimators OK: twin v2 and all four baselines reproduce the M6 W4 cells exactly")
+    cells = pd.read_csv(os.path.join(HERE, "runs", "m8_cells.csv")).set_index(["window", "target"])
+    new = pd.concat([m8_report.evaluate(w) for w in ("w4", "w5")]).set_index(["window", "target"]).loc[cells.index]
+    num = [c for c in cells.columns if cells[c].dtype.kind == "f"]
+    diff = (cells[num] - new[num]).abs().max().max()
+    assert diff < 1e-9, f"M8 cells differ from real/runs/m8_cells.csv by {diff}"
+    print("M8 OK: all 16 cells of real/runs/m8_cells.csv reproduced exactly")
     print("m8_dev:" + buf.getvalue(), end="")
 
 
@@ -129,8 +140,15 @@ def main():
     head, _, m8 = child.stdout.partition("m8_dev:")
     print(head.strip())
     ref = open(os.path.join(HERE, "runs", "m8_dev.md")).read()
-    assert m8 == ref, "m8_dev output differs from real/runs/m8_dev.md"
-    print("analysis OK: m8_dev reproduced exactly with joint_hv_autoscaler blocked")
+    # The W4 error columns of m8_dev.md predate the second W4 truth run (M8), so W4 rows
+    # are compared on the fitted parameters only; W1-W3 rows must match in full.
+    def rows(text):
+        return [[c.strip() for c in l.strip("|").split("|")] for l in text.splitlines() if l[:4] in ("| w1", "| w2", "| w3", "| w4")]
+    got, want = rows(m8), rows(ref)
+    assert len(got) == len(want) == 8, "m8_dev table has the wrong number of rows"
+    for g, r in zip(got, want):
+        assert (g[:4] == r[:4]) if r[0] == "w4" else (g == r), f"m8_dev row differs: {g} vs {r}"
+    print("analysis OK: m8_dev fits reproduced exactly (W1-W3 rows in full, W4 parameters) with joint_hv_autoscaler blocked")
     check_traces()
     check_controllers()
     print("ALL CHECKS PASSED")
