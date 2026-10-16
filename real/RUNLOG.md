@@ -132,3 +132,28 @@
 | 2026-10-15 08:48 | saul-native merged into main; smoke run (harness 2870ed6, joint_hv_autoscaler imports blocked) OK (same load and scaling as on_w5_log_eps0_r1 steps 0-7). Cluster idle, web-service 2/2, CPU limit still 200m. | - |
 | 2026-10-15 11:29 | Deploy api-service (second app, deploy/api-service, code sha256 cddfe92e32f2) into hv-phase0 via deploy/apply.sh api-service: 2 pods, CPU 200m/200m. web-service untouched. | - |
 | 2026-10-15 11:30 | OPE knee check api-service: 2 replicas, CPU limit 200m, 9 rps levels | 2026-10-15 11:44 |
+| 2026-10-15 11:46 | OPE harness on_api_w1_log_eps0.1_r1: api-service, dithered eps=0.1, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 12:39 |
+| 2026-10-15 12:37 | OPE harness on_api_w1_log_eps0_r1: api-service, dithered eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 13:30 |
+| 2026-10-15 13:29 | OPE harness on_api_w1_log_eps0.1_r2: api-service, dithered eps=0.1, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 14:22 |
+| 2026-10-15 14:21 | OPE harness on_api_w1_log_eps0_r2: api-service, dithered eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 15:14 |
+| 2026-10-15 15:12 | OPE harness on_api_w1_truth_hpa30: api-service, hpa30 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 16:05 |
+| 2026-10-15 16:04 | OPE harness on_api_w1_truth_hpa50: api-service, hpa50 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 16:57 |
+| 2026-10-15 16:55 | OPE harness on_api_w1_truth_hpa85: api-service, hpa85 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 17:48 |
+| 2026-10-15 17:47 | OPE harness on_api_w1_truth_hpa95: api-service, hpa95 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 18:40 |
+| 2026-10-15 18:39 | OPE harness on_api_w1_truth_hpa70_stab0: api-service, hpa70_stab0 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 19:32 |
+| 2026-10-15 19:30 | OPE harness on_api_w1_truth_hpa70_stab10: api-service, hpa70_stab10 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 20:23 |
+| 2026-10-15 20:21 | OPE harness on_api_w1_truth_slo_cost: api-service, slo_cost eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 21:14 |
+| 2026-10-15 21:13 | OPE harness on_api_w1_truth_pred70: api-service, pred70 eps=0, bitbrains/io-bound start 4725, 200 steps x 15s, CPU limit 200m | 2026-10-15 22:06 |
+| 2026-10-15 22:04 | OPE harness on_api_w4_log_eps0.1_r1: api-service, dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 22:57 |
+| 2026-10-15 22:56 | OPE harness on_api_w4_log_eps0_r1: api-service, dithered eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-15 23:49 |
+| 2026-10-15 23:47 | OPE harness on_api_w4_log_eps0.1_r2: api-service, dithered eps=0.1, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 00:40 |
+| 2026-10-16 00:38 | OPE harness on_api_w4_log_eps0_r2: api-service, dithered eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 01:31 |
+| 2026-10-16 01:29 | OPE harness on_api_w4_truth_hpa30: api-service, hpa30 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 02:22 |
+| 2026-10-16 02:21 | OPE harness on_api_w4_truth_hpa50: api-service, hpa50 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 03:14 |
+| 2026-10-16 03:12 | OPE harness on_api_w4_truth_hpa85: api-service, hpa85 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 04:05 |
+| 2026-10-16 04:03 | OPE harness on_api_w4_truth_hpa95: api-service, hpa95 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 04:56 |
+| 2026-10-16 04:55 | OPE harness on_api_w4_truth_hpa70_stab0: api-service, hpa70_stab0 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 05:48 |
+| 2026-10-16 05:46 | OPE harness on_api_w4_truth_hpa70_stab10: api-service, hpa70_stab10 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 06:39 |
+| 2026-10-16 06:37 | OPE harness on_api_w4_truth_slo_cost: api-service, slo_cost eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 07:30 |
+| 2026-10-16 07:29 | OPE harness on_api_w4_truth_pred70: api-service, pred70 eps=0, azure/cpu-bound start 4075, 200 steps x 15s, CPU limit 200m | 2026-10-16 08:22 |
+| 2026-10-16 08:27 | M9 batch finished 08:20 UTC: 24/24 runs exit 0; report real/runs/m9_report.md (Q1-Q3 PASS on both windows, Q4 PASS; queue lower bound 0.013). The log's last line reads 'M8 DONE' (label copied from m8.sh, fixed). Cluster idle, web-service 2/2, api-service 2/2, CPU limit 200m. | - |

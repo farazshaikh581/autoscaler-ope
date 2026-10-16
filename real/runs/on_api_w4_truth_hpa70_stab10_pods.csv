@@ -1,0 +1,16 @@
+step,pod,created_s,ready_s,readiness_delay_s
+3,api-service-7d584f645c-p2ltn,43.0,52.0,9.0
+4,api-service-7d584f645c-6ccfp,58.0,67.0,9.0
+5,api-service-7d584f645c-422sh,73.0,81.0,8.0
+6,api-service-7d584f645c-6vj4d,89.0,97.0,8.0
+7,api-service-7d584f645c-bx29n,103.0,111.0,8.0
+11,api-service-7d584f645c-frrz4,163.0,171.0,8.0
+17,api-service-7d584f645c-2pcqc,254.0,262.0,8.0
+32,api-service-7d584f645c-r85l6,478.0,488.0,10.0
+33,api-service-7d584f645c-wvssm,494.0,502.0,8.0
+38,api-service-7d584f645c-7k5wv,568.0,576.0,8.0
+88,api-service-7d584f645c-cxrw8,1318.0,1327.0,9.0
+93,api-service-7d584f645c-4vhfn,1394.0,1401.0,7.0
+94,api-service-7d584f645c-wt8ng,1409.0,1416.0,7.0
+95,api-service-7d584f645c-vgqb7,1424.0,1431.0,7.0
+130,api-service-7d584f645c-4wjf8,1948.0,1956.0,8.0

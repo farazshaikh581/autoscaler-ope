@@ -1,0 +1,52 @@
+{
+ "live": true,
+ "policy": "dithered",
+ "eps": 0.0,
+ "behaviour_util": 0.7,
+ "seed": 110002,
+ "family": "bitbrains",
+ "workload": "io-bound",
+ "start": 4725,
+ "steps": 200,
+ "period": 15.0,
+ "load_seconds": 12,
+ "app": "api-service",
+ "max_rps": 1508.0,
+ "tag": "on_api_w1_log_eps0_r2",
+ "quiet": false,
+ "cpu_int": 0.5,
+ "trace_sha256": "006f072f152047ef004ae78b6ca6a5b5b094822cd9642853591523d4293cc820",
+ "cluster": {
+  "nodes": {
+   "k8s-worker1": "schedulable",
+   "k8s-worker2": "schedulable",
+   "k8s-worker3": "schedulable",
+   "k8s-worker4": "schedulable",
+   "saul": "schedulable"
+  },
+  "cpu_affinity": [
+   0,
+   2,
+   4,
+   6,
+   8,
+   10,
+   12,
+   14
+  ],
+  "vpa_args": {
+   "vpa-recommender": [
+    "--vpa-object-namespace=hv-phase0"
+   ],
+   "vpa-updater": [
+    "--vpa-object-namespace=hv-phase0"
+   ]
+  },
+  "cpu_limit": "200m",
+  "app": "api-service",
+  "app_code_sha256": "cddfe92e32f23aed4987162d7eeb047101db5ff49e40cccdcc0f7fc603b70e8e"
+ },
+ "topology": "all 4 workers schedulable",
+ "ope_commit": "cf2b897433a7d187faddbf951c1dd62afa4a431e",
+ "started": "2026-10-15T14:21:02Z"
+}

@@ -47,4 +47,4 @@ done
 log "batch finished; analysis on CPUs $ANALYSIS_CPUS at nice 19"
 OMP_NUM_THREADS=1 taskset -c "$ANALYSIS_CPUS" nice -n 19 "$PY" real/m9_report.py > real/runs/m9_report.md 2>&1
 log "report exit $?: real/runs/m9_report.md"
-log "M8 DONE"
+log "M9 DONE"
