@@ -3,3 +3,5 @@ __pycache__/
 results/logs/
 .deps/
 real/dryruns/overnight_test/
+paper/figs/fonts/cache/
+paper/figs/fonts/fonts.conf
