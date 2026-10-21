@@ -1,5 +1,7 @@
 # M4 run plan: OPE on saul's real cluster (proposal, nothing run yet)
 
+> Status note, added after the runs: this plan was run in full in October 2026. Outcomes: `real/runs/pilot_report.md` and `real/runs/overnight_report.md`. The text below is unchanged from before the runs.
+
 Preconditions: E1 has finished (its EXIT trap restores the stock VPA profile and
 uncordons the workers), AND the go is given. `harness.py --live` refuses to start
 while E1's runner is alive or any HPA/VPA object exists in hv-phase0.
